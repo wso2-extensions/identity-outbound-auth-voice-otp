@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Identity-connector-voiceotp-test-suite">
+    <test name="voiceotp-authenticator-all" preserve-order="true" parallel="false">
+        <classes>
+            <class name="org.wso2.carbon.identity.authenticator.voiceotp.test.VoiceOTPAuthenticatorTest"/>
+            <class name="org.wso2.carbon.identity.authenticator.voiceotp.test.VoiceOTPUtilsTest"/>
+            <class name="org.wso2.carbon.identity.authenticator.voiceotp.test.OnetimePasswordTest"/>
+        </classes>
+    </test>
+</suite>
