@@ -356,8 +356,8 @@
                 <version>2.3.1</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>${maven.compiler.plugin.source}</source>
+                    <target>${maven.compiler.plugin.target}</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -426,7 +426,7 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
-                        <source>8</source>
+                        <source>11</source>
                     </configuration>
                 </plugin>
             </plugins>
@@ -449,6 +449,8 @@
         <identity.governance.version>1.4.1</identity.governance.version>
         <carbon.identity.event.version>5.18.206</carbon.identity.event.version>
         <carbon.identity.version.range>[5.16.0,6.0.0)</carbon.identity.version.range>
+        <maven.compiler.plugin.source>11</maven.compiler.plugin.source>
+        <maven.compiler.plugin.target>11</maven.compiler.plugin.target>
         <commons-logging.version>4.4.11</commons-logging.version>
         <carbon.kernel.version>4.9.0</carbon.kernel.version>
         <oltu.version>1.0.0.wso2v2</oltu.version>
