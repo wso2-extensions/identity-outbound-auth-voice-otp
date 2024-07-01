@@ -17,11 +17,11 @@
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.voiceotp</groupId>
         <artifactId>identity-outbound-auth-voice-otp</artifactId>
-        <version>1.0.0.0</version>
+        <version>1.0.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.voiceotp.connector</artifactId>
-    <version>1.0.0.0</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
     <name>WSO2 Carbon - Authenticator Library For VoiceOTP</name>
     <url>http://wso2.org</url>
