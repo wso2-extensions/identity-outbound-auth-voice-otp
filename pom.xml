@@ -45,17 +45,17 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.idp.mgt</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.governance</groupId>
                 <artifactId>org.wso2.carbon.identity.recovery</artifactId>
-                <version>1.8.14.11</version>
+                <version>${identity.governance.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.governance</groupId>
                 <artifactId>org.wso2.carbon.identity.governance</artifactId>
-                <version>1.8.14.11</version>
+                <version>${identity.governance.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
@@ -70,17 +70,17 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.application.common</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.user.profile</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.core</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.ops4j.pax.logging</groupId>
@@ -95,7 +95,7 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.application.authentication.framework</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.ops4j.pax.logging</groupId>
@@ -110,12 +110,12 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.notification.mgt</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.provisioning</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon</groupId>
@@ -140,7 +140,7 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.application.mgt</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>xalan</groupId>
@@ -161,7 +161,7 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.application.authentication.endpoint.util</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.extension.identity.authenticator.utils</groupId>
@@ -171,12 +171,12 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.application.common.model</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.wso2.carbon.identity.framework</groupId>
                 <artifactId>org.wso2.carbon.identity.event</artifactId>
-                <version>5.25.92</version>
+                <version>${carbon.identity.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.ops4j.pax.logging</groupId>
@@ -196,7 +196,7 @@
             <dependency>
                 <groupId>org.wso2.carbon.identity.governance</groupId>
                 <artifactId>org.wso2.carbon.identity.governance</artifactId>
-                <version>1.8.14.11</version>
+                <version>${identity.governance.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>
