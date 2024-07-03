@@ -716,6 +716,8 @@ public class VoiceOTPAuthenticatorTest {
         configProperties.add(otpSeparator);
         Property otpDigitSeparator = new Property();
         configProperties.add(otpDigitSeparator);
+        Property divisor = new Property();
+        configProperties.add(divisor);
         Property showErrorInfo = new Property();
         configProperties.add(showErrorInfo);
         Property maskValues = new Property();

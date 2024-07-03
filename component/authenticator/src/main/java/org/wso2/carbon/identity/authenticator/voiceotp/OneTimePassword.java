@@ -21,11 +21,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.identity.application.authentication.framework.exception.AuthenticationFailedException;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * This class contains util methods to generate an OTP.
@@ -41,6 +42,12 @@ public class OneTimePassword {
     private static final int[] doubleDigits = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
     private static final Log log = LogFactory.getLog(OneTimePassword.class);
 
+    /**
+     * Returns the token generated with random numbers for given size.
+     *
+     * @param size
+     * @return generated token
+     */
     public static String getRandomNumber(int size) {
 
         StringBuilder generatedToken = new StringBuilder();
@@ -94,7 +101,8 @@ public class OneTimePassword {
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
 
-    public static byte[] hmacShaGenerate(byte[] keyBytes, byte[] text) throws NoSuchAlgorithmException, InvalidKeyException {
+    public static byte[] hmacShaGenerate(byte[] keyBytes, byte[] text)
+            throws NoSuchAlgorithmException, InvalidKeyException {
 
         Mac hmacSha;
         try {
@@ -177,8 +185,10 @@ public class OneTimePassword {
      *                                  algorithms available.
      * @throws InvalidKeyException      The secret provided was not a valid HMAC-SHA-1 key.
      */
-    public static String generateAlphaNumericOTP(byte[] secret, long movingFactor, int codeDigits, boolean addChecksum,
-                                                 int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
+    public static String generateAlphaNumericOTP(byte[] secret, long movingFactor,
+                                                 int codeDigits, boolean addChecksum,
+                                                 int truncationOffset)
+            throws NoSuchAlgorithmException, InvalidKeyException {
         // put movingFactor value into text byte array
         String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
@@ -215,7 +225,8 @@ public class OneTimePassword {
      * @param isEnableAlphanumericToken a flag that indicates the token is alphanumeric or not
      * @return the generated token
      */
-    public String generateToken(String key, String base, int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
+    public String generateToken(String key, String base,
+                                int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
 
         int truncOffset = 0;
         if (isEnableAlphanumericToken) {

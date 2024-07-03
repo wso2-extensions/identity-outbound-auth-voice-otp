@@ -22,6 +22,9 @@ import org.wso2.carbon.identity.governance.IdentityGovernanceService;
 import org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockService;
 import org.wso2.carbon.user.core.service.RealmService;
 
+/**
+ * VoiceOTPServiceDataHolder class.
+ */
 public class VoiceOTPServiceDataHolder {
 
     private static volatile VoiceOTPServiceDataHolder voiceOTPServiceDataHolder = new VoiceOTPServiceDataHolder();

@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+/**
+ * VoiceOTPConstants class for maintain constants of the project.
+ */
 public class VoiceOTPConstants {
 
     private static final String VOICEOTP_PREFIX = "VoiceOTP-";
@@ -40,7 +43,8 @@ public class VoiceOTPConstants {
     public static final String MOBILE_CLAIM = "http://wso2.org/claims/mobile";
     public static final String SAVED_OTP_LIST = "http://wso2.org/claims/otpbackupcodes";
     public static final String USER_VOICEOTP_DISABLED_CLAIM_URI = "http://wso2.org/claims/identity/voiceotp_disabled";
-    public static final String VOICE_OTP_FAILED_ATTEMPTS_CLAIM = "http://wso2.org/claims/identity/failedVoiceOtpAttempts";
+    public static final String VOICE_OTP_FAILED_ATTEMPTS_CLAIM =
+            "http://wso2.org/claims/identity/failedVoiceOtpAttempts";
     public static final String FAILED_LOGIN_LOCKOUT_COUNT_CLAIM =
             "http://wso2.org/claims/identity/failedLoginLockoutCount";
     public static final String ACCOUNT_LOCKED_CLAIM = "http://wso2.org/claims/identity/accountLocked";
@@ -57,7 +61,6 @@ public class VoiceOTPConstants {
             "mobile_number_pattern_failure_error_message";
     public static final String SHOW_ERROR_INFO = "show_detailed_error_info";
     public static final String VALUES_TO_BE_MASKED_IN_ERROR_INFO = "values_to_be_masked";
-    public static final String VOICE_MESSAGE = "Verification Code: ";
     public static final String BACKUP_CODE = "BackupCode";
     public static final String IS_ENABLED_RETRY = "RetryEnable";
     public static final String IS_ENABLED_RESEND = "ResendEnable";
@@ -72,9 +75,11 @@ public class VoiceOTPConstants {
     public static final String SHOW_AUTH_FAILURE_REASON = "showAuthFailureReason";
     public static final String ENABLE_ACCOUNT_LOCKING_FOR_FAILED_ATTEMPTS = "EnableAccountLockingForFailedAttempts";
     public static final String ENABLE_PAYLOAD_ENCODING_FOR_VOICE_OTP = ".";
-    public static final String OTP_NUMBER_SPLIT_ENABLED="EnableOTPNumberSplit";
+    public static final String OTP_NUMBER_SPLIT_ENABLED = "EnableOTPNumberSplit";
     public static final String OTP_SEPARATOR = "OTPSeparator";
     public static final String DEFAULT_OTP_SEPARATOR = "%2B";
+    public static final String DIVISOR = "divisor";
+    public static final int DEFAULT_DIVISOR = 1;
 
     public static final String GET_METHOD = "GET";
     public static final String POST_METHOD = "POST";
@@ -141,7 +146,7 @@ public class VoiceOTPConstants {
     public static final String SENT_OTP_TOKEN_TIME = "sentOTPTokenTime";
     public static final String TOKEN_EXPIRED = "tokenExpired";
     public static final String TOKEN_EXPIRED_VALUE = "token.expired";
-    public static final String ATTRIBUTE_VOICE_SENT_TO = "send-to" ;
+    public static final String ATTRIBUTE_VOICE_SENT_TO = "send-to";
     public static final String TEMPLATE_TYPE = "TEMPLATE_TYPE";
     public static final String EVENT_NAME = "VoiceOTP";
     public static final String LOCAL_AUTHENTICATOR = "LOCAL";

@@ -37,6 +37,9 @@ import org.wso2.carbon.user.core.service.RealmService;
 
 import java.util.Hashtable;
 
+/**
+ *  This is the OSGI service component.
+ */
 @Component(
         name = "identity.application.authenticator.VoiceOTP.component",
         immediate = true
@@ -52,9 +55,9 @@ public class VoiceOTPAuthenticatorServiceComponent {
             Hashtable<String, String> props = new Hashtable<String, String>();
             ctxt.getBundleContext().registerService(ApplicationAuthenticator.class.getName(),
                     authenticator, props);
-            if (log.isDebugEnabled()) {
-                log.debug("VoiceOTP authenticator is activated");
-            }
+
+            log.debug("VoiceOTP authenticator is activated");
+
         } catch (Throwable e) {
             log.fatal("Error while activating the VoiceOTP authenticator ", e);
         }
@@ -62,9 +65,9 @@ public class VoiceOTPAuthenticatorServiceComponent {
 
     @Deactivate
     protected void deactivate(ComponentContext ctxt) {
-        if (log.isDebugEnabled()) {
-            log.debug("VoiceOTP authenticator is deactivated");
-        }
+
+        log.debug("VoiceOTP authenticator is deactivated");
+
     }
 
     @Reference(

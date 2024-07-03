@@ -43,6 +43,9 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * VoiceOTPUtils class.
+ */
 public class VoiceOTPUtils {
 
     private static final Log log = LogFactory.getLog(VoiceOTPUtils.class);
@@ -58,9 +61,9 @@ public class VoiceOTPUtils {
         if (authConfig != null) {
             return authConfig.getParameterMap();
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Authenticator configs not found. Hence returning an empty map");
-        }
+
+        log.debug("Authenticator configs not found. Hence returning an empty map");
+
         return Collections.emptyMap();
     }
 
@@ -123,7 +126,8 @@ public class VoiceOTPUtils {
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
             userStoreManager.setUserClaimValues(username, attribute, null);
         } catch (AuthenticationFailedException e) {
-            throw new VoiceOTPException("Exception occurred while connecting to User Store: Authentication is failed. ", e);
+            throw new VoiceOTPException("Exception occurred while connecting " +
+                    "to User Store: Authentication is failed. ", e);
         }
     }
 
@@ -151,9 +155,9 @@ public class VoiceOTPUtils {
             throw new VoiceOTPException("Error while validating the user.", e);
         }
         if (!isUserExist) {
-            if (log.isDebugEnabled()) {
-                log.debug("User does not exist in the User Store");
-            }
+
+            log.debug("User does not exist in the User Store");
+
             throw new VoiceOTPException("User does not exist in the User Store.");
         }
     }
@@ -352,7 +356,7 @@ public class VoiceOTPUtils {
     }
 
     /**
-     * Check whether admin allows to use the backup codes or not
+     * Check whether admin allows to use the backup codes or not.
      *
      * @param context the AuthenticationContext
      * @return backupCode
@@ -374,22 +378,13 @@ public class VoiceOTPUtils {
         String useVoiceProviderCodesConfig = getConfiguration(context, VoiceOTPConstants.USE_INTERNAL_ERROR_CODES);
         if (StringUtils.isNotEmpty(useVoiceProviderCodesConfig)) {
             useInternalErrorCodes = Boolean.parseBoolean(useVoiceProviderCodesConfig);
-            if (log.isDebugEnabled()) {
-                log.debug("UseInternalErrorCodes config is enabled in Voice-OTP Authenticator configuration");
-            }
+
+            log.debug("UseInternalErrorCodes config is enabled in Voice-OTP Authenticator configuration");
+
         }
         return useInternalErrorCodes;
     }
 
-    /**
-     * Return the value for UseInternalErrorCodes.
-     *
-     * @return useInternalErrorCodes.
-     */
-    public static boolean useInternalErrorCodes() {
-
-        return useInternalErrorCodes;
-    }
     /**
      * Check whether admin allows to generate the alphanumeric token or not.
      *
@@ -528,7 +523,7 @@ public class VoiceOTPUtils {
     public static boolean isLocalUser(AuthenticationContext context) {
 
         Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
-        if(stepConfigMap != null) {
+        if (stepConfigMap != null) {
             for (StepConfig stepConfig : stepConfigMap.values()) {
                 if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep()) {
                     if (stepConfig.getAuthenticatedIdP().equals(VoiceOTPConstants.LOCAL_AUTHENTICATOR)) {
@@ -551,53 +546,6 @@ public class VoiceOTPUtils {
 
         return Boolean
                 .parseBoolean(getConfiguration(context, VoiceOTPConstants.ENABLE_PAYLOAD_ENCODING_FOR_VOICE_OTP));
-    }
-
-    /**
-     * Checks whether the otp number split is enabled
-     *
-     * @param context Authentication context.
-     * @return True if splitting is enabled.
-     */
-    public static boolean isOTPNumberSplitEnabled(AuthenticationContext context) {
-
-        Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
-
-        String isSplitEnabled = authenticatorProperties.get(VoiceOTPConstants.OTP_NUMBER_SPLIT_ENABLED);
-
-        if(isSplitEnabled != null && !isSplitEnabled.isEmpty()){
-            return Boolean.parseBoolean(isSplitEnabled);
-        }
-        return true;
-    }
-
-    /**
-     * Split the given number by provided divisor
-     *
-     * @param context Authentication context.
-     * @return split number
-     */
-
-    public static String splitAndEncodeNumber(String otp, int divisor, AuthenticationContext context) {
-        StringBuilder result = new StringBuilder();
-        String otpSeparationCharacters = VoiceOTPUtils.getOTPSeparationCharacters(context);
-        for (int i = 0; i < otp.length(); i += divisor) {
-            int endIndex = Math.min(i + divisor, otp.length());
-            result.append(otp.substring(i, endIndex)).append(otpSeparationCharacters);
-        }
-        return result.substring(0,result.length()-otpSeparationCharacters.length());
-    }
-
-    public static String getOTPSeparationCharacters(AuthenticationContext context){
-
-        Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
-        String otpSeparationCharacters =  authenticatorProperties.get(VoiceOTPConstants.OTP_SEPARATOR);
-        if(otpSeparationCharacters != null){
-            return otpSeparationCharacters;
-        }else{
-            return VoiceOTPConstants.DEFAULT_OTP_SEPARATOR;
-        }
-
     }
 
     /**
