@@ -50,7 +50,7 @@
         if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
             errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-            if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+            if ("authentication.fail.message".equalsIgnoreCase(errorMessage)) {
                 errorMessage = IdentityManagementEndpointUtil.i18n(resourceBundle,"error.retry");
             } else if (errorMessage.equalsIgnoreCase(VoiceOTPConstants.UNABLE_SEND_CODE_VALUE)) {
                 errorMessage = IdentityManagementEndpointUtil.i18n(resourceBundle,"error.send");

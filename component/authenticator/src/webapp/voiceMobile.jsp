@@ -58,7 +58,7 @@
         if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
             errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-                if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+                if ("authentication.fail.message".equalsIgnoreCase(errorMessage)) {
                     errorMessage = "Authentication Failed! Please Retry";
                 }
 

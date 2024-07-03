@@ -75,7 +75,7 @@
         if (request.getParameter(Constants.AUTH_FAILURE_MSG) != null) {
             errorMessage = request.getParameter(Constants.AUTH_FAILURE_MSG);
 
-            if (errorMessage.equalsIgnoreCase("authentication.fail.message")) {
+            if ("authentication.fail.message".equalsIgnoreCase(errorMessage)) {
                 errorMessage = IdentityManagementEndpointUtil.i18n(resourceBundle,"error.retry");
             }
             if (errorMessage.equalsIgnoreCase(VoiceOTPConstants.TOKEN_EXPIRED_VALUE)) {
