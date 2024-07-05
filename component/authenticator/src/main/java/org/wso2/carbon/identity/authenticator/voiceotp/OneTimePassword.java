@@ -30,10 +30,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * This class contains util methods to generate an OTP.
- *
- * Important: These methods are duplicated in the common module's
- * 'org.wso2.carbon.identity.voiceotp.common.util.OneTimePasswordUtils' class as well.
- * Any fixes here, should be reflected there as well.
  */
 public class OneTimePassword {
 
@@ -65,6 +61,8 @@ public class OneTimePassword {
     }
 
     /**
+     * Calculates a checksum value based on a given number and the number of digits in that number.
+     *
      * @param num    the number to calculate the checksum for
      * @param digits number of significant places in the number
      * @return the checksum of num
