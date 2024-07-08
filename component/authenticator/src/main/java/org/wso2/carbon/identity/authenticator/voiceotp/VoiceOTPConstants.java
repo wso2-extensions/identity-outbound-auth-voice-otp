@@ -30,9 +30,9 @@ public class VoiceOTPConstants {
     private static final String VOICEOTP_PREFIX = "VoiceOTP-";
     public static final String AUTHENTICATOR_NAME = "VoiceOTP";
     public static final String AUTHENTICATOR_FRIENDLY_NAME = "Voice OTP";
-    public static final String ALGORITHM_NAME = "SHA1PRNG";
-    public static final String ALGORITHM_HMAC = "HmacSHA1";
-    public static final String ALGORITHM_HMAC_SHA = "HMAC-SHA-1";
+    public static final String ALGORITHM_NAME = "DRBG";
+    public static final String ALGORITHM_HMAC = "HmacSHA256";
+    public static final String ALGORITHM_HMAC_SHA = "HMAC-SHA-256";
     public static final String CHAR_SET_UTF_8 = "UTF-8";
 
     public static final int SECRET_KEY_LENGTH = 5;

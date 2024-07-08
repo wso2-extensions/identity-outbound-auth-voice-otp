@@ -5,7 +5,7 @@ The VoiceOTP authenticator allows you to authenticate user via otp which is deli
 
 # File based Configurations 
 
-Add the below configurations to the deployment.toml file 
+Add the below configurations to the deployment.toml file. 
 
 Authenticator related configurations
 
@@ -46,10 +46,10 @@ url="/voice_mobile.do"
 ```
 # Create claims
 
-1. Create "http://wso2.org/claims/identity/voiceotp_disabled" claim 
+1. Create "http://wso2.org/claims/identity/voiceotp_disabled" claim. 
 
-* Go to management console -> claims -> Add -> Add Local Claim 
-* Enter "http://wso2.org/claims/identity/voiceotp_disabled" as the claim URI
+* Go to management console -> claims -> Add -> Add Local Claim. 
+* Enter "http://wso2.org/claims/identity/voiceotp_disabled" as the claim URI.
 * Enter "voiceotp_disabled" as the Display Name  and Description.
 * Add correct attribute mapping for this claim for the Primary userstore.
 
@@ -70,7 +70,7 @@ Add the voice otp authenticator to the authentication step from the Local & Outb
 
 Create a new IdP for the external Voice OTP provider with VoiceOTP authenticator. 
 
-1. Tick "Enable" checkbox
+1. Tick "Enable" checkbox.
 2. Enter the API endpoint URL of the voice otp provider as the "Voice URL"(Mandatory).The placeholders are $ctx.num which will be replaced with the user's mobile number and $ctx.otp which will replace with the otp .
 3. Enter the REST API method name of the endpoint as the "Http Method"(Mandatory)
 4. Enter the headers required(eg : Authorization header) to invoke the endpoint as the "HTTP Headers". The placeholders are $ctx.num which will be replaced with the user's mobile number and $ctx.otp which will replace with the otp .
@@ -80,7 +80,7 @@ Create a new IdP for the external Voice OTP provider with VoiceOTP authenticator
 8. The "Separate OTP Digits" section represents the character which needs to be added between the otp numbers before sending to the Voice OTP provider. For example, by default it will have "%2B" which represents URL encoded space character. 
 9. The "Divisor value" represents how the otp number separation should be handled. For example the default value is 1 and it will add the separation character explains in 6th point between every number. Eg: 1%2B2%2B3%2B4%2B5%2B6. If the divisor value is two it will be like 12%2B34%2B56. And it will speak like "TWELVE THIRTYFOUR FIFTYSIX" during the call.
 10. Enter true for the "Show Detailed Error Information" section if you need detailed error message.
-11. Enter any comma separated values to the "Mask values in Error Info " section, if you need some error text needs to be masked with "*"
+11. Enter any comma separated values to the "Mask values in Error Info " section, if you need some error text needs to be masked with "*".
 12. Enter the regex pattern in the "Mobile Number Regex Pattern" section, if it is required to validate the mobile number pattern when capturing and updating the mobile number during the authentication(When user doesn't have a mobile number configured in the user profile).
 13. Enter error message for invalid mobile number pattern in the "Regex Violation Error Message" section.
 

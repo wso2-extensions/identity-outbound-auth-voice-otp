@@ -23,7 +23,7 @@ import org.wso2.carbon.identity.handler.event.account.lock.service.AccountLockSe
 import org.wso2.carbon.user.core.service.RealmService;
 
 /**
- * VoiceOTPServiceDataHolder class.
+ * Service Data Holder related to voice otp authentication flow.
  */
 public class VoiceOTPServiceDataHolder {
 
@@ -40,27 +40,33 @@ public class VoiceOTPServiceDataHolder {
     }
 
     public static VoiceOTPServiceDataHolder getInstance() {
+
         return voiceOTPServiceDataHolder;
     }
 
 
     public BundleContext getBundleContext() {
+
         return bundleContext;
     }
 
     public void setBundleContext(BundleContext bundleContext) {
+
         this.bundleContext = bundleContext;
     }
 
     public IdentityEventService getIdentityEventService() {
+
         return identityEventService;
     }
 
     public void setIdentityEventService(IdentityEventService identityEventService) {
+
         this.identityEventService = identityEventService;
     }
 
     public RealmService getRealmService() {
+
         return realmService;
     }
 

@@ -50,23 +50,24 @@ public class VoiceOTPAuthenticatorServiceComponent {
 
     @Activate
     protected void activate(ComponentContext ctxt) {
+
         try {
             VoiceOTPAuthenticator authenticator = new VoiceOTPAuthenticator();
             Hashtable<String, String> props = new Hashtable<String, String>();
             ctxt.getBundleContext().registerService(ApplicationAuthenticator.class.getName(),
                     authenticator, props);
 
-            log.debug("VoiceOTP authenticator is activated");
+            log.debug("VoiceOTP authenticator is activated.");
 
         } catch (Throwable e) {
-            log.fatal("Error while activating the VoiceOTP authenticator ", e);
+            log.fatal("Error while activating the VoiceOTP authenticator. ", e);
         }
     }
 
     @Deactivate
     protected void deactivate(ComponentContext ctxt) {
 
-        log.debug("VoiceOTP authenticator is deactivated");
+        log.debug("VoiceOTP authenticator is deactivated.");
 
     }
 
@@ -78,6 +79,7 @@ public class VoiceOTPAuthenticatorServiceComponent {
             unbind = "unsetIdentityEventService"
     )
     protected void setIdentityEventService(IdentityEventService eventService) {
+
         VoiceOTPServiceDataHolder.getInstance().setIdentityEventService(eventService);
     }
 
@@ -94,10 +96,12 @@ public class VoiceOTPAuthenticatorServiceComponent {
             unbind = "unsetRealmService"
     )
     protected void setRealmService(RealmService realmService) {
+
         VoiceOTPServiceDataHolder.getInstance().setRealmService(realmService);
     }
 
     protected void unsetRealmService(RealmService realmService) {
+
         VoiceOTPServiceDataHolder.getInstance().setRealmService(null);
     }
 

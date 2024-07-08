@@ -27,7 +27,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
-import org.wso2.carbon.identity.authenticator.voiceotp.OneTimePassword;
+import org.wso2.carbon.identity.authenticator.voiceotp.OneTimePasswordUtils;
 
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
@@ -36,11 +36,11 @@ import java.security.NoSuchAlgorithmException;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class OnetimePasswordTest {
-    private OneTimePassword oneTimePassword;
+    private OneTimePasswordUtils oneTimePassword;
 
     @BeforeMethod
     public void setUp() throws Exception {
-        oneTimePassword = new OneTimePassword();
+        oneTimePassword = new OneTimePasswordUtils();
         initMocks(this);
     }
 
@@ -55,34 +55,34 @@ public class OnetimePasswordTest {
 
     @Test
     public void testCalcChecksum() {
-        Assert.assertEquals(OneTimePassword.calcChecksum(100, 10), 8);
+        Assert.assertEquals(OneTimePasswordUtils.calcChecksum(100, 10), 8);
     }
 
     @Test
     public void testGetRandomNumber() {
-        Assert.assertNotNull(OneTimePassword.getRandomNumber(10));
+        Assert.assertNotNull(OneTimePasswordUtils.getRandomNumber(10));
     }
 
     @Test
     public void testHmacShaGenerate() throws InvalidKeyException, NoSuchAlgorithmException {
         String input = "Hello World";
         byte[] bytes = input.getBytes(Charset.forName("UTF-8"));
-        byte[] answer = OneTimePassword.hmacShaGenerate(bytes, bytes);
+        byte[] answer = OneTimePasswordUtils.hmacShaGenerate(bytes, bytes);
         String s = new String(answer, Charset.forName("UTF-8"));
-        Assert.assertNotNull(OneTimePassword.hmacShaGenerate(bytes, bytes));
+        Assert.assertNotNull(OneTimePasswordUtils.hmacShaGenerate(bytes, bytes));
     }
 
     @Test
     public void testGenerateTokenWithNumericToken() throws Exception {
-        OneTimePassword otp = PowerMockito.spy(oneTimePassword);
+        OneTimePasswordUtils otp = PowerMockito.spy(oneTimePassword);
         Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, false),
-                "0701282405");
+                "0020315280");
     }
 
     @Test
     public void testGenerateTokenWithAlphaNumericToken() throws Exception {
-        OneTimePassword otp = PowerMockito.spy(oneTimePassword);
+        OneTimePasswordUtils otp = PowerMockito.spy(oneTimePassword);
         Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, true),
-                "IWYTV8DJ31");
+                "3FDC3J6089");
     }
 }

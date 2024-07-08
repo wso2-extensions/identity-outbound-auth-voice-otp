@@ -207,7 +207,7 @@ public class VoiceOTPUtilsTest {
         AuthenticationContext authenticationContext = new AuthenticationContext();
         authenticationContext.setTenantDomain("wso2.org");
         authenticationContext.setProperty(VoiceOTPConstants.IS_VOICEOTP_ENABLE_BY_USER, "true");
-        Assert.assertEquals(VoiceOTPUtils.isVoiceOTPEnableOrDisableByUser(authenticationContext), true);
+        Assert.assertEquals(VoiceOTPUtils.isVoiceOTPEnabledByUser(authenticationContext), true);
     }
 
     @Test
@@ -293,7 +293,7 @@ public class VoiceOTPUtilsTest {
         when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(VoiceOTPUtils.isVoiceOTPEnableOrDisableByUser(context)).thenReturn(true);
+        when(VoiceOTPUtils.isVoiceOTPEnabledByUser(context)).thenReturn(true);
         Map<String, String> claims = new HashMap<>();
         claims.put(VoiceOTPConstants.USER_VOICEOTP_DISABLED_CLAIM_URI, "false");
         userStoreManager.setUserClaimValues(MultitenantUtils.getTenantAwareUsername(username), claims, null);

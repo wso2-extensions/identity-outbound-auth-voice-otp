@@ -85,7 +85,6 @@ import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.MOBILE_NUMBER_REGEX;
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.POST_METHOD;
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.REQUESTED_USER_MOBILE;
-import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.RESEND;
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.XML_CONTENT_TYPE;
 
 import static java.util.Base64.getEncoder;
@@ -102,7 +101,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      * Check whether the authentication or logout request can be handled by the authenticator.
      *
      * @param request The HttpServletRequest
-     * @return whether the authenticator can handle the inbound request
+     * @return Whether the authenticator can handle the inbound request
      */
     @Override
     public boolean canHandle(HttpServletRequest request) {
@@ -117,7 +116,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     }
 
     /**
-     * Check whether the authentication or logout request can be handled by the authenticator.
+     * Process the authentication request based on the request type.
      *
      * @param request The HttpServletRequest
      * @param response The HttpServletResponse
@@ -138,7 +137,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             initiateAuthenticationRequest(request, response, context);
             return AuthenticatorFlowStatus.INCOMPLETE;
         } else if (StringUtils.isEmpty(request.getParameter(VoiceOTPConstants.CODE))) {
-            // if the request comes with code, it will go through this flow.
+            // if the request doesn't have code, it will go through this flow.
             initiateAuthenticationRequest(request, response, context);
             if (context.getProperty(VoiceOTPConstants.AUTHENTICATION)
                     .equals(VoiceOTPConstants.AUTHENTICATOR_NAME)) {
@@ -148,9 +147,6 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 // if the request comes with authentication is basic, complete the flow.
                 return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
             }
-        } else if (Boolean.parseBoolean(request.getParameter(RESEND))) {
-            AuthenticatorFlowStatus authenticatorFlowStatus = super.process(request, response, context);
-            return authenticatorFlowStatus;
         } else {
             AuthenticatorFlowStatus authenticatorFlowStatus = super.process(request, response, context);
             return authenticatorFlowStatus;
@@ -158,11 +154,16 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     }
 
     /**
-     * Initiate the authentication request.
+     * Protected helper method to initiate the authentication request.
+     * This method performs several steps to initiate the authentication flow based on VoiceOTP configuration
+     * and user context:
      *
-     * @param request The HttpServletRequest
-     * @param response The HttpServletResponse
-     * @param context The AuthenticationContext
+     * @param request  The HTTP servlet request
+     * @param response The HTTP servlet response
+     * @param context  The authentication context
+     * @throws AuthenticationFailedException  If authentication fails due to missing user, VoiceOTP errors,
+     *                                       or user store errors
+     * @see VoiceOTPConstants
      */
     @Override
     protected void initiateAuthenticationRequest(HttpServletRequest request, HttpServletResponse response,
@@ -174,7 +175,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             String mobileNumber;
             String tenantDomain = context.getTenantDomain();
             context.setProperty(VoiceOTPConstants.AUTHENTICATION, VoiceOTPConstants.AUTHENTICATOR_NAME);
-            if (!tenantDomain.equals(VoiceOTPConstants.SUPER_TENANT)) {
+            if (!VoiceOTPConstants.SUPER_TENANT.equals(tenantDomain)) {
                 IdentityHelperUtil.loadApplicationAuthenticationXMLFromRegistry(context, getName(), tenantDomain);
             }
             FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
@@ -183,7 +184,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             // find the authenticated user.
             if (authenticatedUser == null) {
 
-                log.debug("Authentication failed: Could not find the authenticated user. ");
+                log.error("Authentication failed: Could not find the authenticated user. ");
 
                 throw new AuthenticationFailedException
                         ("Authentication failed: Cannot proceed further without identifying the user. ");
@@ -205,7 +206,10 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 log.debug("Voice OTP is mandatory. Hence processing in mandatory path");
 
                 processVoiceOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
+            // Checks whether local user exists and the voice otp is not disabled for the user
             } else if (isUserExists && !VoiceOTPUtils.isVoiceOTPDisableForLocalUser(username, context)) {
+                // Trigger retry flow when it is not request for resending OTP, it is not mobile number update failure
+                // or the user is a local user and the user account is locked
                 if ((context.isRetrying() && !Boolean.parseBoolean(request.getParameter(VoiceOTPConstants.RESEND))
                         && !isMobileNumberUpdateFailed(context)) || (VoiceOTPUtils.isLocalUser(context) &&
                         VoiceOTPUtils.isAccountLocked(authenticatedUser))) {
@@ -218,7 +222,6 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     if (StringUtils.isNotEmpty(mobileNumber)) {
                         proceedWithOTP(response, context, errorPage, mobileNumber, queryParams, username);
                     }
-
                 }
             } else {
                 processFirstStepOnly(authenticatedUser, context);
@@ -238,12 +241,9 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      */
     private String getMultiOptionURIQueryParam(HttpServletRequest request) {
 
-        if (request != null) {
-            String multiOptionURI = request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI);
-            if (StringUtils.isNotEmpty(multiOptionURI)) {
-                return "&" + VoiceOTPConstants.MULTI_OPTION_URI + "="
-                        + Encode.forUriComponent(multiOptionURI);
-            }
+        if (request != null && StringUtils.isNotEmpty(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI))) {
+            return "&" + VoiceOTPConstants.MULTI_OPTION_URI + "="
+                        + Encode.forUriComponent(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI));
         }
         return StringUtils.EMPTY;
     }
@@ -285,8 +285,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Get the loginPage from authentication.xml file or use the login page from constant file.
      *
-     * @param context the AuthenticationContext
-     * @return the loginPage
+     * @param context The AuthenticationContext
+     * @return The loginPage
      */
     private String getLoginPage(AuthenticationContext context) {
 
@@ -296,7 +296,6 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     .replace(VoiceOTPConstants.LOGIN_PAGE, VoiceOTPConstants.VOICE_LOGIN_PAGE);
 
             log.debug("Default authentication endpoint context is used");
-
         }
         return loginPage;
     }
@@ -304,8 +303,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Get the errorPage from authentication.xml file or use the error page from constant file.
      *
-     * @param context the AuthenticationContext
-     * @return the errorPage
+     * @param context The AuthenticationContext
+     * @return The errorPage
      * @throws AuthenticationFailedException
      */
     private String getErrorPage(AuthenticationContext context) throws AuthenticationFailedException {
@@ -316,7 +315,6 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     .replace(VoiceOTPConstants.LOGIN_PAGE, VoiceOTPConstants.ERROR_PAGE);
 
             log.debug("Default authentication endpoint context is used");
-
         }
         return errorPage;
     }
@@ -324,9 +322,9 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * To get the redirection URL.
      *
-     * @param baseURI     the base path
-     * @param queryParams the queryParams
-     * @return url
+     * @param baseURI     The base path
+     * @param queryParams The queryParams
+     * @return URL
      */
     private String getURL(String baseURI, String queryParams) {
 
@@ -342,14 +340,15 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Redirect to an error page.
      *
-     * @param response    the HttpServletResponse
-     * @param queryParams the queryParams
+     * @param response    The HttpServletResponse
+     * @param queryParams The queryParams
      * @throws AuthenticationFailedException
      */
     private void redirectToErrorPage(HttpServletResponse response, AuthenticationContext context, String queryParams,
                                      String retryParam)
             throws AuthenticationFailedException {
-        // that Enable the Voice OTP in user's Profile. Cannot proceed further without Voice OTP authentication.
+
+        // That Enable the Voice OTP in user's Profile. Cannot proceed further without Voice OTP authentication.
         try {
             String errorPage = getErrorPage(context);
             String url = getURL(errorPage, queryParams);
@@ -362,8 +361,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * In VoiceOTP optional case proceed with first step only.It can be basic or federated.
      *
-     * @param authenticatedUser the name of authenticatedUser
-     * @param context           the AuthenticationContext
+     * @param authenticatedUser The name of authenticatedUser
+     * @param context           The AuthenticationContext
      */
     private void processFirstStepOnly(AuthenticatedUser authenticatedUser, AuthenticationContext context) {
 
@@ -381,7 +380,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             context.setProperty(VoiceOTPConstants.AUTHENTICATION, VoiceOTPConstants.BASIC);
         } else {
 
-            log.debug("Found federated authenticator in previous step. Hence setting a local user");
+            log.debug("Found federated authenticator in previous step. Hence setting a federated user");
 
             FederatedAuthenticatorUtil.updateAuthenticatedUserInStepConfig(context, authenticatedUser);
             context.setProperty(VoiceOTPConstants.AUTHENTICATION, VoiceOTPConstants.FEDERETOR);
@@ -391,10 +390,10 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Update mobile number when user forgets to update the mobile number in user's profile.
      *
-     * @param context      the AuthenticationContext
-     * @param request      the HttpServletRequest
-     * @param username     the Username
-     * @param tenantDomain the TenantDomain
+     * @param context      The AuthenticationContext
+     * @param request      The HttpServletRequest
+     * @param username     The Username
+     * @param tenantDomain The TenantDomain
      * @throws VoiceOTPException
      * @throws UserStoreException
      */
@@ -415,12 +414,12 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Check with VoiceOTP mandatory case with VoiceOTP flow.
      *
-     * @param context      the AuthenticationContext
-     * @param request      the HttpServletRequest
-     * @param response     the HttpServletResponse
-     * @param queryParams  the queryParams
-     * @param username     the Username
-     * @param isUserExists check whether user exist or not
+     * @param context      The AuthenticationContext
+     * @param request      The HttpServletRequest
+     * @param response     The HttpServletResponse
+     * @param queryParams  The queryParams
+     * @param username     The Username
+     * @param isUserExists Check whether user exist or not
      * @throws AuthenticationFailedException
      * @throws VoiceOTPException
      */
@@ -428,7 +427,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                                               HttpServletResponse response, String queryParams, String username,
                                               boolean isUserExists)
             throws AuthenticationFailedException, VoiceOTPException {
-        //the authentication flow happens with voice otp authentication.
+
+        //The authentication flow happens with voice otp authentication.
         String tenantDomain = context.getTenantDomain();
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(VoiceOTPConstants.RESEND))
@@ -445,12 +445,13 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     }
 
     /**
+     * This method will retrieve the mobile number of the federated user and proceed.
      *
      * @param context The AuthenticationContext
      * @param response The HttpServletResponse
-     * @param username username
-     * @param queryParams request query params
-     * @param sendOtpToFederatedMobile whether it needs to send the otp for federated user mobile number
+     * @param username Username
+     * @param queryParams Request query params
+     * @param sendOtpToFederatedMobile Whether it needs to send the otp for federated user mobile number
      * @throws AuthenticationFailedException
      */
     private void proceedOTPWithFederatedMobileNumber(AuthenticationContext context, HttpServletResponse response,
@@ -475,7 +476,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 for (Map.Entry<ClaimMapping, String> entry : userAttributes.entrySet()) {
                     String key = String.valueOf(entry.getKey().getLocalClaim().getClaimUri());
                     String value = entry.getValue();
-                    if (key.equals(federatedMobileAttributeKey)) {
+                    if (key != null && key.equals(federatedMobileAttributeKey)) {
                         mobile = String.valueOf(value);
                         proceedWithOTP(response, context, getErrorPage(context), mobile, queryParams, username);
                         break;
@@ -500,7 +501,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      *
      * @param context
      * @param authenticatorName
-     * @return configured federated Mobile attribute key
+     * @return Configured federated Mobile attribute key
      */
     private String getFederatedMobileAttributeKey(AuthenticationContext context, String authenticatorName) {
 
@@ -508,7 +509,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         Map<String, String> parametersMap;
         String tenantDomain = context.getTenantDomain();
         Object propertiesFromLocal = context.getProperty(IdentityHelperConstants.GET_PROPERTY_FROM_REGISTRY);
-        if (propertiesFromLocal != null || tenantDomain.equals(VoiceOTPConstants.SUPER_TENANT)) {
+        if (propertiesFromLocal != null || VoiceOTPConstants.SUPER_TENANT.equals(tenantDomain)) {
             parametersMap = FederatedAuthenticatorUtil.getAuthenticatorConfig(authenticatorName);
             if (parametersMap != null) {
                 federatedVoiceAttributeKey = parametersMap.get
@@ -524,14 +525,14 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Check with VoiceOTP flow with user existence.
      *
-     * @param context      the AuthenticationContext
-     * @param request      the HttpServletRequest
-     * @param response     the HttpServletResponse
-     * @param isUserExists check whether user exist or not
-     * @param username     the UserName
-     * @param queryParams  the queryParams
-     * @param tenantDomain the TenantDomain
-     * @param errorPage    the errorPage
+     * @param context      The AuthenticationContext
+     * @param request      The HttpServletRequest
+     * @param response     The HttpServletResponse
+     * @param isUserExists Check whether user exist or not
+     * @param username     The UserName
+     * @param queryParams  The queryParams
+     * @param tenantDomain The TenantDomain
+     * @param errorPage    The errorPage
      * @throws AuthenticationFailedException
      * @throws VoiceOTPException
      */
@@ -597,7 +598,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             }
         } else if (VoiceOTPUtils.sendOtpToFederatedMobile(context)) {
 
-            log.debug("Voice OTP is mandatory. But user is not there in active directory. " +
+            log.debug("Voice OTP is mandatory. But user is not there in the user store. " +
                         "Hence send the otp to the federated mobile claim");
 
             proceedOTPWithFederatedMobileNumber(context, response, username, queryParams,
@@ -616,12 +617,12 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Proceed with One Time Password.
      *
-     * @param response     the HttpServletResponse
-     * @param context      the AuthenticationContext
-     * @param errorPage    the errorPage
-     * @param mobileNumber the mobile number
-     * @param queryParams  the queryParams
-     * @param username     the Username
+     * @param response     The HttpServletResponse
+     * @param context      The AuthenticationContext
+     * @param errorPage    The errorPage
+     * @param mobileNumber The mobile number
+     * @param queryParams  The queryParams
+     * @param username     The Username
      * @throws AuthenticationFailedException
      */
     private void proceedWithOTP(HttpServletResponse response, AuthenticationContext context, String errorPage,
@@ -640,8 +641,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         boolean isEnableAlphanumericToken = VoiceOTPUtils.isEnableAlphanumericToken(context);
         try {
             // One time password is generated and stored in the context.
-            OneTimePassword token = new OneTimePassword();
-            String secret = OneTimePassword.getRandomNumber(VoiceOTPConstants.SECRET_KEY_LENGTH);
+            OneTimePasswordUtils token = new OneTimePasswordUtils();
+            String secret = OneTimePasswordUtils.getRandomNumber(VoiceOTPConstants.SECRET_KEY_LENGTH);
             if ((VoiceOTPUtils.getTokenLength(context)) != null) {
                 tokenLength = Integer.parseInt(VoiceOTPUtils.getTokenLength(context));
             }
@@ -716,12 +717,12 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     }
 
     /**
-     * Check the status codes when resend and retry enabled.
+     * Check the status codes when the retry enabled.
      *
-     * @param response    the HttpServletResponse
-     * @param context     the AuthenticationContext
-     * @param queryParams the queryParams
-     * @param errorPage   the errorPage
+     * @param response    The HttpServletResponse
+     * @param context     The AuthenticationContext
+     * @param queryParams The queryParams
+     * @param errorPage   The errorPage
      * @throws AuthenticationFailedException
      */
     private void checkStatusCode(HttpServletResponse response, AuthenticationContext context,
@@ -751,27 +752,29 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 }
                 redirectToErrorPage(response, context, queryParams, retryParam);
             } else if (isRetryEnabled) {
+                boolean isResendCodeEnabled = VoiceOTPUtils.isEnableResendCode(context);
                 if (StringUtils.isNotEmpty((String) context.getProperty(VoiceOTPConstants.TOKEN_EXPIRED))) {
                     response.sendRedirect(url + VoiceOTPConstants.RESEND_CODE
-                            + VoiceOTPUtils.isEnableResendCode(context) + VoiceOTPConstants.ERROR_MESSAGE +
+                            + isResendCodeEnabled + VoiceOTPConstants.ERROR_MESSAGE +
                             VoiceOTPConstants.TOKEN_EXPIRED_VALUE);
                 } else {
                     response.sendRedirect(url + VoiceOTPConstants.RESEND_CODE
-                            + VoiceOTPUtils.isEnableResendCode(context) + VoiceOTPConstants.RETRY_PARAMS);
+                            + isResendCodeEnabled + VoiceOTPConstants.RETRY_PARAMS);
                 }
             } else {
                 url = getURL(errorPage, queryParams);
+                boolean isResendCodeEnabled = VoiceOTPUtils.isEnableResendCode(context);
                 if (Boolean.parseBoolean(String.valueOf(context.getProperty(VoiceOTPConstants.CODE_MISMATCH)))) {
                     response.sendRedirect(url + VoiceOTPConstants.RESEND_CODE
-                            + VoiceOTPUtils.isEnableResendCode(context) + VoiceOTPConstants.ERROR_MESSAGE
+                            + isResendCodeEnabled + VoiceOTPConstants.ERROR_MESSAGE
                             + VoiceOTPConstants.ERROR_CODE_MISMATCH);
                 } else if (StringUtils.isNotEmpty((String) context.getProperty(VoiceOTPConstants.TOKEN_EXPIRED))) {
                     response.sendRedirect(url + VoiceOTPConstants.RESEND_CODE
-                            + VoiceOTPUtils.isEnableResendCode(context) +
+                            + isResendCodeEnabled +
                             VoiceOTPConstants.ERROR_MESSAGE + VoiceOTPConstants.TOKEN_EXPIRED_VALUE);
                 } else {
                     response.sendRedirect(url + VoiceOTPConstants.RESEND_CODE
-                            + VoiceOTPUtils.isEnableResendCode(context) + VoiceOTPConstants.RETRY_PARAMS);
+                            + isResendCodeEnabled + VoiceOTPConstants.RETRY_PARAMS);
                 }
             }
         } catch (IOException e) {
@@ -782,8 +785,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Get the screen value for configured screen attribute.
      *
-     * @param context the AuthenticationContext
-     * @return screenValue
+     * @param context The AuthenticationContext
+     * @return ScreenValue
      * @throws AuthenticationFailedException
      */
     private String getScreenValue(AuthenticationContext context) throws AuthenticationFailedException {
@@ -805,9 +808,9 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Redirect the user to mobile number request page.
      *
-     * @param response    the HttpServletResponse
-     * @param context     the AuthenticationContext
-     * @param queryParams the queryParams
+     * @param response    The HttpServletResponse
+     * @param context     The AuthenticationContext
+     * @param queryParams The queryParams
      * @throws AuthenticationFailedException
      */
     private void redirectToMobileNoReqPage(HttpServletResponse response, AuthenticationContext context,
@@ -863,9 +866,9 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Process the response of the VoiceOTP end-point.
      *
-     * @param request  the HttpServletRequest
-     * @param response the HttpServletResponse
-     * @param context  the AuthenticationContext
+     * @param request  The HttpServletRequest
+     * @param response The HttpServletResponse
+     * @param context  The AuthenticationContext
      * @throws AuthenticationFailedException
      */
     @Override
@@ -966,6 +969,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      */
     private void processValidUserToken(AuthenticationContext context, AuthenticatedUser authenticatedUser) throws
             AuthenticationFailedException {
+
         Optional<Object> tokenValidityTime = Optional.ofNullable(context.getProperty(VoiceOTPConstants.
                 TOKEN_VALIDITY_TIME));
         if (!tokenValidityTime.isPresent() || !NumberUtils.isNumber(tokenValidityTime.get().toString())) {
@@ -1100,8 +1104,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Get the user realm of the logged in user.
      *
-     * @param username the Username
-     * @return the userRealm
+     * @param username The Username
+     * @return The userRealm
      * @throws AuthenticationFailedException
      */
     private UserRealm getUserRealm(String username) throws AuthenticationFailedException {
@@ -1345,9 +1349,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     }
                 }
             } else {
-
                 log.debug("No configured headers found. Header string is empty");
-
             }
 
             // Processing HTTP Method
@@ -1381,17 +1383,12 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                         }
                     }
                     payload = payload.replaceAll("\\$ctx.num", encodedMobileNo).replaceAll("\\$ctx.otp", otpToken);
-                    OutputStreamWriter writer = null;
-                    try {
-                        writer = new OutputStreamWriter(httpConnection.getOutputStream(),
-                                VoiceOTPConstants.CHAR_SET_UTF_8);
+
+                    try (OutputStreamWriter writer = new OutputStreamWriter
+                            (httpConnection.getOutputStream(), VoiceOTPConstants.CHAR_SET_UTF_8)) {
                         writer.write(payload);
                     } catch (IOException e) {
                         throw new AuthenticationFailedException("Error while posting payload message ", e);
-                    } finally {
-                        if (writer != null) {
-                            writer.close();
-                        }
                     }
                 }
             }
@@ -1524,14 +1521,14 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     /**
      * Proceed with Voice API's rest call.
      *
-     * @param context      the AuthenticationContext
-     * @param voiceUrl       the voiceUrl
-     * @param httpMethod   the httpMethod
-     * @param headerString the headerString
-     * @param payload      the payload
-     * @param httpResponse the httpResponse
-     * @param mobile       the mobile number
-     * @param otpToken     the OTP token
+     * @param context      The AuthenticationContext
+     * @param voiceUrl     The voiceUrl
+     * @param httpMethod   The httpMethod
+     * @param headerString The headerString
+     * @param payload      The payload
+     * @param httpResponse The httpResponse
+     * @param mobile       The mobile number
+     * @param otpToken     The OTP token
      * @return true or false
      * @throws IOException
      * @throws AuthenticationFailedException
@@ -1541,14 +1538,14 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                                 String otpToken) throws IOException, AuthenticationFailedException {
 
 
-        log.debug("Preparing message for sending out");
+        log.debug("Preparing request for sending out to voice otp provider.");
 
         HttpURLConnection httpConnection;
         boolean connection;
         String receivedMobileNumber = URLEncoder.encode(mobile, CHAR_SET_UTF_8);
 
         if (isOTPNumberSplitEnabled(context)) {
-            otpToken = splitAndEncodeNumber(otpToken, getDivisor(context), context);
+            otpToken = splitAndFormatOtp(otpToken, getDivisor(context), context);
         }
 
         voiceUrl = voiceUrl.replaceAll("\\$ctx.num", receivedMobileNumber)
@@ -1568,7 +1565,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             return false;
         }
         String subUrl = voiceProviderUrl.getProtocol();
-        if (subUrl.equals(VoiceOTPConstants.HTTPS)) {
+        if (VoiceOTPConstants.HTTPS.equals(subUrl)) {
             httpConnection = (HttpsURLConnection) voiceProviderUrl.openConnection();
         } else {
             httpConnection = (HttpURLConnection) voiceProviderUrl.openConnection();
@@ -1607,9 +1604,9 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      * Get a screen value from the user attributes. If you need to show n digits of mobile number or any other user
      * attribute value in the UI.
      *
-     * @param userRealm the user Realm
-     * @param username  the username
-     * @return the screen attribute
+     * @param userRealm The user Realm
+     * @param username  The username
+     * @return The screen attribute
      * @throws UserStoreException
      */
     public String getScreenAttribute(AuthenticationContext context, UserRealm userRealm, String username)
@@ -1645,7 +1642,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      * @param context
      * @param screenUserAttributeValue
      * @param noOfDigits
-     * @return masked value
+     * @return Masked value
      */
     private String getMaskedValue(AuthenticationContext context, String screenUserAttributeValue, int noOfDigits) {
 
@@ -1697,7 +1694,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      * Retrieve the error response code.
      *
      * @param errorMsg
-     * @return error response code
+     * @return Error response code
      */
     private String getHttpErrorResponseCode(String errorMsg) {
 
@@ -1855,7 +1852,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      * Get authenticated user claim values.
      *
      * @param authenticatedUser
-     * @return claim map
+     * @return Claim map
      * @throws AuthenticationFailedException
      */
     private Map<String, String> getUserClaimValues(AuthenticatedUser authenticatedUser)
@@ -1963,12 +1960,13 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
     }
 
     /**
-     * Split the given number by provided divisor.
+     * Split the given otp by provided divisor.
+     * Separate the digits with given separation characters
      *
      * @param context Authentication context.
      * @return split number
      */
-    private String splitAndEncodeNumber(String otp, int divisor, AuthenticationContext context) {
+    private String splitAndFormatOtp(String otp, int divisor, AuthenticationContext context) {
 
         StringBuilder result = new StringBuilder();
         String otpSeparationCharacters = getOTPSeparationCharacters(context);
@@ -1981,10 +1979,10 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
 
     /**
      * This will retrieve the otp separation characters configured in the authenticator UI configurations.
-     * If the otp separator is not configured in the UI, it will return the default otp seperator
+     * If the otp separator is not configured in the UI, it will return the default otp separator.
      *
      * @param context
-     * @return otp separation characters
+     * @return Otp separation characters
      */
     private String getOTPSeparationCharacters(AuthenticationContext context) {
 
@@ -2021,7 +2019,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      * If the divisor value is not configured in the UI, it will return default divisor value.
      *
      * @param context
-     * @return divisor value
+     * @return Divisor value
      */
     private int getDivisor(AuthenticationContext context) {
 

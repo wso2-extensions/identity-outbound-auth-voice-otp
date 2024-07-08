@@ -19,7 +19,7 @@
 package org.wso2.carbon.identity.authenticator.voiceotp.exception;
 
 /**
- * VoiceOTPException class.
+ * Exception class to handle voice otp connector specific exceptions.
  */
 public class VoiceOTPException extends Exception {
 
