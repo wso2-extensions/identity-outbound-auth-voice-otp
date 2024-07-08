@@ -366,8 +366,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
      */
     private void processFirstStepOnly(AuthenticatedUser authenticatedUser, AuthenticationContext context) {
 
-
-        log.debug("Processing First step only. Skipping VoiceOTP");
+        log.debug("Processing First step only. Skipping VoiceOTP.");
 
         //the authentication flow happens with basic authentication.
         StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
