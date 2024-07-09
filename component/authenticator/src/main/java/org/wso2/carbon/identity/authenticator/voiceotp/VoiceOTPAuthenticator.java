@@ -1464,8 +1464,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         if (LOG.isDebugEnabled()) {
             errorContent = contentRaw;
         }
-        LOG.error(String.format("Following Error occurred while sending call for user: %s, %s.", context
-                .getProperty(VoiceOTPConstants.USER_NAME), errorContent));
+        LOG.error(String.format("Following Error occurred while sending call for user. Error : %s."
+                , errorContent));
 
         return content;
     }
