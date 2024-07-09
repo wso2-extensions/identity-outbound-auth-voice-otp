@@ -112,13 +112,13 @@ public class VoiceOTPUtils {
             throws VoiceOTPException, UserStoreException {
 
         try {
-            // updating user attributes is independent from tenant association.not tenant association check needed here.
-            // user is always in the super tenant.
+            // Updating user attributes is independent from tenant association.not tenant association check needed here.
+            // User is always in the super tenant.
             UserRealm userRealm = VoiceOTPUtils.getUserRealm(tenantDomain);
             if (userRealm == null) {
                 throw new VoiceOTPException("The specified tenant domain " + tenantDomain + " does not exist.");
             }
-            // check whether user already exists in the system.
+            // Check whether user already exists in the system.
             VoiceOTPUtils.verifyUserExists(username, tenantDomain);
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
             userStoreManager.setUserClaimValues(username, attribute, null);

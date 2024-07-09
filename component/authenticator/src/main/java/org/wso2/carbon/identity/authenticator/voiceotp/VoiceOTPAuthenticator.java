@@ -181,7 +181,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
             username = String.valueOf(context.getProperty(VoiceOTPConstants.USER_NAME));
             authenticatedUser = (AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
-            // find the authenticated user.
+            // Find the authenticated user.
             if (authenticatedUser == null) {
 
                 log.error("Authentication failed: Could not find the authenticated user. ");
@@ -206,10 +206,10 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 log.debug("Voice OTP is mandatory. Hence processing in mandatory path");
 
                 processVoiceOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
-            // Checks whether local user exists and the voice otp is not disabled for the user
+            // Checks whether local user exists and the voice otp is not disabled for the user.
             } else if (isUserExists && !VoiceOTPUtils.isVoiceOTPDisableForLocalUser(username, context)) {
                 // Trigger retry flow when it is not request for resending OTP, it is not mobile number update failure
-                // or the user is a local user and the user account is locked
+                // or the user is a local user and the user account is locked.
                 if ((context.isRetrying() && !Boolean.parseBoolean(request.getParameter(VoiceOTPConstants.RESEND))
                         && !isMobileNumberUpdateFailed(context)) || (VoiceOTPUtils.isLocalUser(context) &&
                         VoiceOTPUtils.isAccountLocked(authenticatedUser))) {
@@ -368,7 +368,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
 
         log.debug("Processing First step only. Skipping VoiceOTP.");
 
-        //the authentication flow happens with basic authentication.
+        // The authentication flow happens with basic authentication.
         StepConfig stepConfig = context.getSequenceConfig().getStepMap().get(context.getCurrentStep() - 1);
         if (stepConfig.getAuthenticatedAutenticator().getApplicationAuthenticator() instanceof
                 LocalApplicationAuthenticator) {
@@ -427,7 +427,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                                               boolean isUserExists)
             throws AuthenticationFailedException, VoiceOTPException {
 
-        //The authentication flow happens with voice otp authentication.
+        // The authentication flow happens with voice otp authentication.
         String tenantDomain = context.getTenantDomain();
         String errorPage = getErrorPage(context);
         if (context.isRetrying() && !Boolean.parseBoolean(request.getParameter(VoiceOTPConstants.RESEND))
@@ -547,7 +547,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 log.debug("Has user enabled Voice OTP : " + isVoiceOTPDisabledByUser);
             }
             if (isVoiceOTPDisabledByUser) {
-                // that Enable the Voice OTP in user's Profile. Cannot proceed further without Voice OTP authentication.
+                // That Enable the Voice OTP in user's Profile. Cannot proceed further without Voice OTP authentication.
                 redirectToErrorPage(response, context, queryParams, VoiceOTPConstants.ERROR_VOICEOTP_DISABLE);
             } else {
                 mobileNumber = getMobileNumber(request, response, context, username, queryParams);
@@ -655,7 +655,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
 
             log.debug("Generated OTP successfully and set to the context.");
 
-            //Get the values of the voice provider related api parameters.
+            // Get the values of the voice provider related api parameters.
             String voiceUrl = authenticatorProperties.get(VoiceOTPConstants.VOICE_URL);
             String httpMethod = authenticatorProperties.get(VoiceOTPConstants.HTTP_METHOD);
             String headerString = authenticatorProperties.get(VoiceOTPConstants.HEADERS);
@@ -1351,7 +1351,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 log.debug("No configured headers found. Header string is empty");
             }
 
-            // Processing HTTP Method
+            // Processing HTTP Method.
             if (log.isDebugEnabled()) {
                 log.debug("Configured http method is " + httpMethod);
             }
@@ -1371,7 +1371,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     */
                     if (VoiceOTPUtils.isPayloadEncodingForVoiceOTPEnabled(context)) {
                         /*
-                        here only the mobile number will be encoded,
+                        Here only the mobile number will be encoded,
                         assuming the rest of the content is in correct format.
                         */
                         encodedMobileNo = getEncodedValue(contentType, receivedMobileNumber);

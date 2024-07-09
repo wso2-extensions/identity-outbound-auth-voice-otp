@@ -52,7 +52,7 @@ public class OneTimePasswordUtils {
         StringBuilder generatedToken = new StringBuilder();
         try {
             SecureRandom number = SecureRandom.getInstance(VoiceOTPConstants.ALGORITHM_NAME);
-            // Generate 20 integers 0..20
+            // Generate 20 integers 0..20.
             for (int i = 0; i < size; i++) {
                 generatedToken.append(number.nextInt(9));
             }
@@ -138,7 +138,7 @@ public class OneTimePasswordUtils {
     public static String generateOTP(byte[] secret, long movingFactor, int codeDigits, boolean addChecksum,
                                      int truncationOffset) throws NoSuchAlgorithmException, InvalidKeyException {
 
-        // put movingFactor value into text byte array
+        // Put movingFactor value into text byte array.
         String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
@@ -146,10 +146,10 @@ public class OneTimePasswordUtils {
             text[i] = (byte) (movingFactor & 0xff);
             movingFactor >>= 8;
         }
-        // compute hmac hash
+        // Compute hmac hash.
         byte[] hash = hmacShaGenerate(secret, text);
 
-        // put selected bytes into result int
+        // Put selected bytes into result int.
         int offset = hash[hash.length - 1] & 0xf;
         if ((0 <= truncationOffset) && (truncationOffset < (hash.length - 4))) {
             offset = truncationOffset;
@@ -192,7 +192,7 @@ public class OneTimePasswordUtils {
                                                  int truncationOffset)
             throws NoSuchAlgorithmException, InvalidKeyException {
 
-        // put movingFactor value into text byte array
+        // Put movingFactor value into text byte array.
         String result = null;
         int digits = addChecksum ? (codeDigits + 1) : codeDigits;
         byte[] text = new byte[8];
@@ -200,9 +200,9 @@ public class OneTimePasswordUtils {
             text[i] = (byte) (movingFactor & 0xff);
             movingFactor >>= 8;
         }
-        // compute hmac hash
+        // Compute hmac hash.
         byte[] hash = hmacShaGenerate(secret, text);
-        // put selected bytes into result int
+        // Put selected bytes into result int.
         int offset = hash[hash.length - 1] & 0xf;
         if ((0 <= truncationOffset) && (truncationOffset < (hash.length - 8))) {
             offset = truncationOffset;
