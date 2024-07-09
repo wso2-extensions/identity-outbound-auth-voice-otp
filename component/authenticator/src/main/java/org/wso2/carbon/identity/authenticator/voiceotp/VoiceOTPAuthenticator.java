@@ -551,7 +551,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             }
         } else if (VoiceOTPUtils.isSendOTPDirectlyToMobile(context)) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("User :" + username + " doesn't exist.");
+                LOG.debug("User doesn't exist.");
             }
             if (request.getParameter(VoiceOTPConstants.MOBILE_NUMBER) == null) {
 
