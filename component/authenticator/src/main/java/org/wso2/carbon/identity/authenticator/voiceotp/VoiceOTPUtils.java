@@ -84,7 +84,7 @@ public class VoiceOTPUtils {
             int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
             RealmService realmService = IdentityTenantUtil.getRealmService();
             userRealm = realmService.getTenantUserRealm(tenantId);
-            username = MultitenantUtils.getTenantAwareUsername(String.valueOf(username));
+            username = MultitenantUtils.getTenantAwareUsername(username);
             boolean isEnablingControlledByUser = isVoiceOTPEnabledByUser(context);
             if (userRealm != null) {
                 if (isEnablingControlledByUser) {
