@@ -189,21 +189,18 @@ public class VoiceOTPUtils {
             AuthenticationFailedException {
 
         UserRealm userRealm;
-        String mobile;
         try {
             String tenantDomain = MultitenantUtils.getTenantDomain(username);
             String tenantAwareUsername = MultitenantUtils.getTenantAwareUsername(username);
             userRealm = getUserRealm(tenantDomain);
             if (userRealm == null) {
                 throw new VoiceOTPException("Cannot find the user realm for the given tenant domain : " + tenantDomain);
-            } else {
-                mobile = userRealm.getUserStoreManager()
-                        .getUserClaimValue(tenantAwareUsername, VoiceOTPConstants.MOBILE_CLAIM, null);
             }
+            return userRealm.getUserStoreManager()
+                        .getUserClaimValue(tenantAwareUsername, VoiceOTPConstants.MOBILE_CLAIM, null);
         } catch (UserStoreException e) {
             throw new VoiceOTPException("Cannot find the user to get the mobile number ", e);
         }
-        return mobile;
     }
 
     /**
