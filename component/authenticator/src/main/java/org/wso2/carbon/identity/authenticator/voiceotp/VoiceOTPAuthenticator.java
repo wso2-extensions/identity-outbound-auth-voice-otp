@@ -481,9 +481,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     }
                 }
                 if (StringUtils.isEmpty(mobile)) {
-
                     LOG.debug("There is no mobile claim to send otp.");
-
                     throw new AuthenticationFailedException("There is no mobile claim to send otp.");
                 }
             } else {
