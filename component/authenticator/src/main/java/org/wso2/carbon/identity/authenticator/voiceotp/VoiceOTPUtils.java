@@ -433,7 +433,7 @@ public class VoiceOTPUtils {
         if ((propertiesFromLocal != null || MultitenantConstants.SUPER_TENANT_DOMAIN_NAME.equals(tenantDomain)) &&
                 getVoiceParameters().containsKey(configName)) {
             configValue = getVoiceParameters().get(configName);
-        } else if ((context.getProperty(configName)) != null) {
+        } else if (context.getProperty(configName) != null) {
             configValue = String.valueOf(context.getProperty(configName));
         }
         if (log.isDebugEnabled()) {
