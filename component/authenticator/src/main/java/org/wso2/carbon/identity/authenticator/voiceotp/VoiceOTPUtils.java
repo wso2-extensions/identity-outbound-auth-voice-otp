@@ -521,12 +521,13 @@ public class VoiceOTPUtils {
     public static boolean isLocalUser(AuthenticationContext context) {
 
         Map<Integer, StepConfig> stepConfigMap = context.getSequenceConfig().getStepMap();
-        if (stepConfigMap != null) {
-            for (StepConfig stepConfig : stepConfigMap.values()) {
-                if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep() &&
-                        VoiceOTPConstants.LOCAL_AUTHENTICATOR.equals(stepConfig.getAuthenticatedIdP())) {
-                    return true;
-                }
+        if (stepConfigMap == null) {
+            return false;
+        }
+        for (StepConfig stepConfig : stepConfigMap.values()) {
+            if (stepConfig.getAuthenticatedUser() != null && stepConfig.isSubjectAttributeStep() &&
+                    VoiceOTPConstants.LOCAL_AUTHENTICATOR.equals(stepConfig.getAuthenticatedIdP())) {
+                return true;
             }
         }
         return false;
