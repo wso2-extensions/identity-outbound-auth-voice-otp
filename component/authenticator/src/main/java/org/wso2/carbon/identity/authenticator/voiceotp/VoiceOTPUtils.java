@@ -102,14 +102,14 @@ public class VoiceOTPUtils {
     }
 
     /**
-     * Update the mobile number (user attribute) in user's profile.
+     * Update the mobile number (user attributes) in user's profile.
      *
      * @param username  the Username.
-     * @param attribute the Attribute.
+     * @param attributes the Attribute.
      * @throws VoiceOTPException Exception.
      * @throws UserStoreException Exception.
      */
-    public static void updateUserAttribute(String username, Map<String, String> attribute, String tenantDomain)
+    public static void updateUserAttribute(String username, Map<String, String> attributes, String tenantDomain)
             throws VoiceOTPException, UserStoreException {
 
         try {
@@ -121,7 +121,7 @@ public class VoiceOTPUtils {
             // Check whether user already exists in the system.
             VoiceOTPUtils.verifyUserExists(username, tenantDomain);
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
-            userStoreManager.setUserClaimValues(username, attribute, null);
+            userStoreManager.setUserClaimValues(username, attributes, null);
         } catch (AuthenticationFailedException e) {
             throw new VoiceOTPException("Exception occurred while connecting " +
                     "to User Store. Authentication is failed. ", e);
