@@ -550,9 +550,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 mobileNumber = getMobileNumber(request, response, context, username, queryParams);
             }
         } else if (VoiceOTPUtils.isSendOTPDirectlyToMobile(context)) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("User doesn't exist.");
-            }
+            LOG.debug("User doesn't exist.");
             if (request.getParameter(VoiceOTPConstants.MOBILE_NUMBER) == null) {
 
                 LOG.debug("Couldn't find the mobile number in request. Hence redirecting to mobile number input " +
@@ -813,49 +811,48 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                                            String queryParams) throws AuthenticationFailedException {
 
         boolean isEnableMobileNoUpdate = VoiceOTPUtils.isEnableMobileNoUpdate(context);
-        if (isEnableMobileNoUpdate) {
-            String loginPage = VoiceOTPUtils.getMobileNumberRequestPage(context);
-            try {
-                String url = getURL(loginPage, queryParams);
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Redirecting to mobile number request page : " + url);
-                }
-                String mobileNumberPatternViolationError = VoiceOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
-                String mobileNumberPattern =
-                        context.getAuthenticatorProperties().get(VoiceOTPConstants.MOBILE_NUMBER_REGEX);
-                if (isMobileNumberUpdateFailed(context)) {
-                    url = FrameworkUtils.appendQueryParamsStringToUrl(url, VoiceOTPConstants.RETRY_PARAMS);
-                    if (context.getProperty(VoiceOTPConstants.PROFILE_UPDATE_FAILURE_REASON) != null) {
-                        String failureReason = String.valueOf(
-                                context.getProperty(VoiceOTPConstants.PROFILE_UPDATE_FAILURE_REASON));
-                        String urlEncodedFailureReason = URLEncoder.encode(failureReason, CHAR_SET_UTF_8);
-                        String failureQueryParam = ERROR_MESSAGE_DETAILS + urlEncodedFailureReason;
-                        url = FrameworkUtils.appendQueryParamsStringToUrl(url, failureQueryParam);
-                    }
-                }
-                if (StringUtils.isNotEmpty(mobileNumberPattern)) {
-                    // Check for regex is violation error message configured in idp configuration.
-                    if (StringUtils.isNotEmpty(context.getAuthenticatorProperties()
-                            .get(VoiceOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE))) {
-                        mobileNumberPatternViolationError = context.getAuthenticatorProperties()
-                                .get(VoiceOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
-                    }
-                    // Send the response with encoded regex pattern and error message.
-                    response.sendRedirect(FrameworkUtils
-                            .appendQueryParamsStringToUrl(url, VoiceOTPConstants.MOBILE_NUMBER_REGEX_PATTERN_QUERY +
-                                    getEncoder().encodeToString(context.getAuthenticatorProperties()
-                                            .get(VoiceOTPConstants.MOBILE_NUMBER_REGEX)
-                                            .getBytes()) +
-                                    VoiceOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE_QUERY +
-                                    getEncoder().encodeToString(mobileNumberPatternViolationError.getBytes())));
-                } else {
-                    response.sendRedirect(url);
-                }
-            } catch (IOException e) {
-                throw new AuthenticationFailedException("Authentication failed!. An IOException was caught.", e);
-            }
-        } else {
+        if (!isEnableMobileNoUpdate) {
             throw new AuthenticationFailedException("Authentication failed!. Update mobile no in your profile.");
+        }
+        String loginPage = VoiceOTPUtils.getMobileNumberRequestPage(context);
+        try {
+            String url = getURL(loginPage, queryParams);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Redirecting to mobile number request page : " + url);
+            }
+            String mobileNumberPatternViolationError = VoiceOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_VIOLATED;
+            String mobileNumberPattern =
+                    context.getAuthenticatorProperties().get(VoiceOTPConstants.MOBILE_NUMBER_REGEX);
+            if (isMobileNumberUpdateFailed(context)) {
+                url = FrameworkUtils.appendQueryParamsStringToUrl(url, VoiceOTPConstants.RETRY_PARAMS);
+                if (context.getProperty(VoiceOTPConstants.PROFILE_UPDATE_FAILURE_REASON) != null) {
+                    String failureReason = String.valueOf(
+                            context.getProperty(VoiceOTPConstants.PROFILE_UPDATE_FAILURE_REASON));
+                    String urlEncodedFailureReason = URLEncoder.encode(failureReason, CHAR_SET_UTF_8);
+                    String failureQueryParam = ERROR_MESSAGE_DETAILS + urlEncodedFailureReason;
+                    url = FrameworkUtils.appendQueryParamsStringToUrl(url, failureQueryParam);
+                }
+            }
+            if (StringUtils.isNotEmpty(mobileNumberPattern)) {
+                // Check for regex is violation error message configured in idp configuration.
+                if (StringUtils.isNotEmpty(context.getAuthenticatorProperties()
+                        .get(VoiceOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE))) {
+                    mobileNumberPatternViolationError = context.getAuthenticatorProperties()
+                            .get(VoiceOTPConstants.MOBILE_NUMBER_PATTERN_FAILURE_ERROR_MESSAGE);
+                }
+                // Send the response with encoded regex pattern and error message.
+                response.sendRedirect(FrameworkUtils
+                        .appendQueryParamsStringToUrl(url, VoiceOTPConstants.MOBILE_NUMBER_REGEX_PATTERN_QUERY +
+                                getEncoder().encodeToString(context.getAuthenticatorProperties()
+                                        .get(VoiceOTPConstants.MOBILE_NUMBER_REGEX)
+                                        .getBytes()) +
+                                VoiceOTPConstants.MOBILE_NUMBER_PATTERN_POLICY_FAILURE_ERROR_MESSAGE_QUERY +
+                                getEncoder().encodeToString(mobileNumberPatternViolationError.getBytes())));
+            } else {
+                response.sendRedirect(url);
+            }
+        } catch (IOException e) {
+            throw new AuthenticationFailedException("Authentication failed!. An IOException was caught.", e);
         }
     }
 
