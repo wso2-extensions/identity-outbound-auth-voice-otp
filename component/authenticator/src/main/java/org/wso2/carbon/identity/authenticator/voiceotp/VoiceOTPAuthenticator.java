@@ -897,11 +897,11 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         }
 
         boolean succeededAttempt = false;
-        if (userToken.equals(contextToken)) {
+        if (contextToken.equals(userToken)) {
             context.removeProperty(VoiceOTPConstants.CODE_MISMATCH);
             processValidUserToken(context, authenticatedUser);
             succeededAttempt = true;
-        } else if (isLocalUser && "true".equals(VoiceOTPUtils.getBackupCode(context))) {
+        } else if (isLocalUser && VoiceOTPConstants.STR_TRUE.equals(VoiceOTPUtils.getBackupCode(context))) {
             succeededAttempt = checkWithBackUpCodes(context, userToken, authenticatedUser);
         } else {
 

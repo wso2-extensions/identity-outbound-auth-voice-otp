@@ -173,6 +173,7 @@ public class VoiceOTPConstants {
     public static final String CORRELATION_ID_MDC = "Correlation-ID";
     public static final String CORRELATION_ID = "correlation-id";
     public static final String MAX_VOICE_OTP_ATTEMPTS_EXCEEDED = "MAX_VOICE_OTP_ATTEMPTS_EXCEEDED";
+    public static final String STR_TRUE = "true";
 
     /**
      * Enums for error messages.
