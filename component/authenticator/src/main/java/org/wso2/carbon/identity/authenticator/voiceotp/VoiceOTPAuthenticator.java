@@ -975,10 +975,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         Optional<Object> otpTokenSentTime = Optional.ofNullable(context.getProperty(VoiceOTPConstants.
                 SENT_OTP_TOKEN_TIME));
         if (!otpTokenSentTime.isPresent() || !NumberUtils.isNumber(otpTokenSentTime.get().toString())) {
-
-            LOG.debug("Could not find OTP sent time");
-
-            throw new AuthenticationFailedException("Internal Error Occurred");
+            LOG.debug("Could not find OTP sent time.");
+            throw new AuthenticationFailedException("Internal Error Occurred. Couldn't find OTP sent time.");
         }
 
         long elapsedTokenTime = System.currentTimeMillis() - Long.parseLong(otpTokenSentTime.get().toString());
