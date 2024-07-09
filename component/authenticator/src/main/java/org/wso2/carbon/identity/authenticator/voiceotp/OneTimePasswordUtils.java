@@ -47,7 +47,7 @@ public class OneTimePasswordUtils {
         StringBuilder generatedToken = new StringBuilder();
         try {
             SecureRandom number = SecureRandom.getInstance(VoiceOTPConstants.ALGORITHM_NAME);
-            // Generate 20 integers 0..20.
+            // If size is 10 , this will generate a number of size 10 with random numbers
             for (int i = 0; i < size; i++) {
                 generatedToken.append(number.nextInt(9));
             }
@@ -143,7 +143,6 @@ public class OneTimePasswordUtils {
         }
         // Compute hmac hash.
         byte[] hash = hmacShaGenerate(secret, text);
-
         // Put selected bytes into result int.
         int offset = hash[hash.length - 1] & 0xf;
         if ((0 <= truncationOffset) && (truncationOffset < (hash.length - 4))) {
