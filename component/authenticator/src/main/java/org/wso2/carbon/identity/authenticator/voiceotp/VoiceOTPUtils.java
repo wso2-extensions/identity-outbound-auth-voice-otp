@@ -86,14 +86,14 @@ public class VoiceOTPUtils {
             userRealm = realmService.getTenantUserRealm(tenantId);
             username = MultitenantUtils.getTenantAwareUsername(username);
             boolean isEnablingControlledByUser = isVoiceOTPEnabledByUser(context);
-            if (userRealm != null) {
+            if (userRealm == null) {
+                throw new VoiceOTPException("Cannot find the user realm for the given tenant domain : " + tenantDomain);
+            } else {
                 if (isEnablingControlledByUser) {
                     Map<String, String> claimValues = userRealm.getUserStoreManager().getUserClaimValues(username,
                             new String[]{VoiceOTPConstants.USER_VOICEOTP_DISABLED_CLAIM_URI}, null);
                     return Boolean.parseBoolean(claimValues.get(VoiceOTPConstants.USER_VOICEOTP_DISABLED_CLAIM_URI));
                 }
-            } else {
-                throw new VoiceOTPException("Cannot find the user realm for the given tenant domain : " + tenantDomain);
             }
         } catch (UserStoreException e) {
             throw new VoiceOTPException("Failed while trying to access userRealm of the user.", e);
