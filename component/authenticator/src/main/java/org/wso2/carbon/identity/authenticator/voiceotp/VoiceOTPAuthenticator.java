@@ -144,7 +144,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                 // if the request comes with authentication is VoiceOTP, it will go through this flow.
                 return AuthenticatorFlowStatus.INCOMPLETE;
             } else {
-                // if the request comes with authentication is basic, complete the flow.
+                // if the request comes with authentication as any other authenticator name, complete the flow.
                 return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
             }
         } else {
@@ -200,9 +200,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             String errorPage = getErrorPage(context);
             // Voice OTP authentication is mandatory and user doesn't disable Voice OTP claim in user's profile.
             if (isVoiceOTPMandatory) {
-
                 LOG.debug("Voice OTP is mandatory. Hence processing in mandatory path.");
-
                 processVoiceOTPMandatoryCase(context, request, response, queryParams, username, isUserExists);
             // Checks whether local user exists and the voice otp is not disabled for the user.
             } else if (isUserExists && !VoiceOTPUtils.isVoiceOTPDisableForLocalUser(username, context)) {
