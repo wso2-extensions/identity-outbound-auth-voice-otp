@@ -262,17 +262,18 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
 
         String mobileNumber = VoiceOTPUtils.getMobileNumberForUsername(username);
         if (StringUtils.isEmpty(mobileNumber)) {
-            String requestMobile = request.getParameter(VoiceOTPConstants.MOBILE_NUMBER);
-            if (StringUtils.isBlank(requestMobile) && !isMobileNumberUpdateFailed(context) && isCodeMismatch(context)) {
+            String userMobileEntered = request.getParameter(VoiceOTPConstants.MOBILE_NUMBER);
+            if (StringUtils.isBlank(userMobileEntered) &&
+                    !isMobileNumberUpdateFailed(context) && isCodeMismatch(context)) {
                 mobileNumber = String.valueOf(context.getProperty(VoiceOTPConstants.REQUESTED_USER_MOBILE));
-            } else if (StringUtils.isBlank(requestMobile)) {
+            } else if (StringUtils.isBlank(userMobileEntered)) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("User does not have a registered mobile number: " + username);
                 }
                 redirectToMobileNoReqPage(response, context, queryParams);
             } else {
-                context.setProperty(VoiceOTPConstants.REQUESTED_USER_MOBILE, requestMobile);
-                mobileNumber = requestMobile;
+                context.setProperty(VoiceOTPConstants.REQUESTED_USER_MOBILE, userMobileEntered);
+                mobileNumber = userMobileEntered;
             }
         }
         return mobileNumber;
