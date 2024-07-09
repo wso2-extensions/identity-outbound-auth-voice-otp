@@ -141,7 +141,7 @@ public class VoiceOTPUtils {
         try {
             UserRealm userRealm = VoiceOTPUtils.getUserRealm(tenantDomain);
             if (userRealm == null) {
-                throw new VoiceOTPException("Super tenant realm not loaded.");
+                throw new VoiceOTPException("Tenant realm not loaded. Tenant : " + tenantDomain);
             }
             UserStoreManager userStoreManager = userRealm.getUserStoreManager();
             if (userStoreManager.isExistingUser(username)) {
