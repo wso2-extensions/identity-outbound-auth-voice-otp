@@ -114,7 +114,6 @@ public class VoiceOTPUtils {
 
         try {
             // Updating user attributes is independent from tenant association.not tenant association check needed here.
-            // User is always in the super tenant.
             UserRealm userRealm = VoiceOTPUtils.getUserRealm(tenantDomain);
             if (userRealm == null) {
                 throw new VoiceOTPException("The specified tenant domain " + tenantDomain + " does not exist.");
