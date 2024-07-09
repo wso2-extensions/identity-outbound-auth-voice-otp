@@ -480,9 +480,7 @@ public class VoiceOTPUtils {
                     .isAccountLocked(authenticatedUser.getUserName(), authenticatedUser.getTenantDomain(),
                             authenticatedUser.getUserStoreDomain());
         } catch (Exception e) {
-            String errorMessage = String.format("Error while validating account lock status of user: %s.",
-                    authenticatedUser.getUserName());
-            throw new AuthenticationFailedException(errorMessage, e);
+            throw new AuthenticationFailedException("Error while validating account lock status of user.", e);
         }
     }
 
