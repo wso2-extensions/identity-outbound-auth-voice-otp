@@ -552,10 +552,8 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         } else if (VoiceOTPUtils.isSendOTPDirectlyToMobile(context)) {
             LOG.debug("User doesn't exist.");
             if (request.getParameter(VoiceOTPConstants.MOBILE_NUMBER) == null) {
-
                 LOG.debug("Couldn't find the mobile number in request. Hence redirecting to mobile number input " +
                             "page.");
-
                 String loginPage = VoiceOTPUtils.getMobileNumberRequestPage(context);
                 try {
                     String url = getURL(loginPage, queryParams);
