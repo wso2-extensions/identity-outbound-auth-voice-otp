@@ -365,7 +365,7 @@ public class VoiceOTPUtils {
      * @param context Authentication Context.
      * @return True if UseInternalError codes is enabled, else return false.
      */
-    public static boolean useInternalErrorCodes(AuthenticationContext context) {
+    public static boolean isUseInternalErrorCodes(AuthenticationContext context) {
 
         String useVoiceProviderCodesConfig = getConfiguration(context, VoiceOTPConstants.USE_INTERNAL_ERROR_CODES);
         if (StringUtils.isNotEmpty(useVoiceProviderCodesConfig)) {
@@ -380,7 +380,7 @@ public class VoiceOTPUtils {
      *
      * @return useInternalErrorCodes.
      */
-    public static boolean useInternalErrorCodes() {
+    public static boolean isUseInternalErrorCodes() {
 
         return useInternalErrorCodes;
     }

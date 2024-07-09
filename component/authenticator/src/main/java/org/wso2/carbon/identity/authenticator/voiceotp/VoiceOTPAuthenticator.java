@@ -674,7 +674,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                     String errorCode = context.getProperty(VoiceOTPConstants.ERROR_CODE).toString();
                     // If UseInternalErrorCodes is configured as true, then http response error codes will be mapped
                     // to local error codes and passed as query param value for authfailure msg.
-                    if (VoiceOTPUtils.useInternalErrorCodes(context)) {
+                    if (VoiceOTPUtils.isUseInternalErrorCodes(context)) {
                         String errorResponseCode = getHttpErrorResponseCode(errorCode);
                         if (StringUtils.isNotEmpty(errorResponseCode)) {
                             String internalErrorCode = VoiceOTPConstants.ErrorMessage.
@@ -1554,7 +1554,7 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
             voiceProviderUrl = new URL(voiceUrl);
         } catch (MalformedURLException e) {
             LOG.error("Error while parsing Voice provider URL: " + voiceUrl, e);
-            if (VoiceOTPUtils.useInternalErrorCodes(context)) {
+            if (VoiceOTPUtils.isUseInternalErrorCodes(context)) {
                 context.setProperty(VoiceOTPConstants.ERROR_CODE,
                         VoiceOTPConstants.ErrorMessage.MALFORMED_URL.getCode());
             } else {
