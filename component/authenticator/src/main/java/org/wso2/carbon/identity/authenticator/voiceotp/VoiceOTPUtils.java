@@ -58,7 +58,8 @@ public class VoiceOTPUtils {
         AuthenticatorConfig authConfig = FileBasedConfigurationBuilder.getInstance()
                 .getAuthenticatorBean(VoiceOTPConstants.AUTHENTICATOR_NAME);
         if (authConfig != null) {
-            return authConfig.getParameterMap();
+            return authConfig.getParameterMap() != null
+                    ? authConfig.getParameterMap() : Collections.emptyMap();
         }
 
         log.debug("Authenticator configs not found. Hence returning an empty map");
