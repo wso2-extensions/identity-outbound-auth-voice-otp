@@ -931,14 +931,14 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
                                 "the userstore for user: " + username, e.getCause());
                     } catch (UserStoreClientException e) {
                         context.setProperty(VoiceOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
-                        throw new AuthenticationFailedException("Mobile claim update failed for user: " + username, e);
+                        throw new AuthenticationFailedException("Mobile claim update failed for user.", e);
                     } catch (UserStoreException e) {
                         Throwable ex = e.getCause();
                         if (ex instanceof UserStoreClientException) {
                             context.setProperty(VoiceOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
                             context.setProperty(VoiceOTPConstants.PROFILE_UPDATE_FAILURE_REASON, ex.getMessage());
                         }
-                        throw new AuthenticationFailedException("Mobile claim update failed for user: " + username, e);
+                        throw new AuthenticationFailedException("Mobile claim update failed for user.", e);
                     }
                 }
             }
