@@ -33,19 +33,14 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class OneTimePasswordUtils {
 
-    /**
-     * These are used to calculate the check-sum digits.
-     * 0 1 2 3 4 5 6 7 8 9
-     */
-
-    private static final int[] doubleDigits = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
-    private static final Log log = LogFactory.getLog(OneTimePasswordUtils.class);
+    private static final int[] checkSumDigits = {0, 2, 4, 6, 8, 1, 3, 5, 7, 9};
+    private static final Log LOG = LogFactory.getLog(OneTimePasswordUtils.class);
 
     /**
      * Returns the token generated with random numbers for given size.
      *
-     * @param size
-     * @return generated token
+     * @param size size.
+     * @return generated token.
      */
     public static String getRandomNumber(int size) {
 
@@ -57,7 +52,7 @@ public class OneTimePasswordUtils {
                 generatedToken.append(number.nextInt(9));
             }
         } catch (NoSuchAlgorithmException e) {
-            log.error("Unable to find the Algorithm", e);
+            LOG.error("Unable to find the Algorithm defined.", e);
         }
 
         return generatedToken.toString();
@@ -78,7 +73,7 @@ public class OneTimePasswordUtils {
             int digit = (int) (num % 10);
             num /= 10;
             if (doubleDigit) {
-                digit = doubleDigits[digit];
+                digit = checkSumDigits[digit];
             }
             total += digit;
             doubleDigit = !doubleDigit;
@@ -222,11 +217,11 @@ public class OneTimePasswordUtils {
     /**
      * Generate the token.
      *
-     * @param key                       The key
-     * @param base                      The base
-     * @param digits                    The number of digits
-     * @param isEnableAlphanumericToken A flag that indicates the token is alphanumeric or not
-     * @return the generated token
+     * @param key                       The key.
+     * @param base                      The base.
+     * @param digits                    The number of digits.
+     * @param isEnableAlphanumericToken A flag that indicates the token is alphanumeric or not.
+     * @return the generated token.
      */
     public String generateToken(String key, String base,
                                 int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
@@ -239,9 +234,9 @@ public class OneTimePasswordUtils {
                 return generateOTP(key.getBytes(), Long.parseLong(base), digits, false, truncOffset);
             }
         } catch (NoSuchAlgorithmException e) {
-            throw new AuthenticationFailedException(" Unable to find the SHA256 Algorithm to generate OTP ", e);
+            throw new AuthenticationFailedException("Unable to find the SHA256 Algorithm to generate OTP.", e);
         } catch (InvalidKeyException e) {
-            throw new AuthenticationFailedException(" Unable to find the secret key ", e);
+            throw new AuthenticationFailedException("Given key is inappropriate for initializing the MAC.", e);
         }
     }
 }

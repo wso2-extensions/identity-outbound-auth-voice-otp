@@ -69,10 +69,10 @@ public class VoiceOTPUtils {
     /**
      * Check whether VoiceOTP is disabled by user.
      *
-     * @param username the Username
-     * @param context  the AuthenticationContext
-     * @return true or false
-     * @throws VoiceOTPException
+     * @param username the Username.
+     * @param context  the AuthenticationContext.
+     * @return true or false.
+     * @throws VoiceOTPException Exception.
      */
     public static boolean isVoiceOTPDisableForLocalUser(String username, AuthenticationContext context)
             throws VoiceOTPException {
@@ -95,7 +95,7 @@ public class VoiceOTPUtils {
                 throw new VoiceOTPException("Cannot find the user realm for the given tenant domain : " + tenantDomain);
             }
         } catch (UserStoreException e) {
-            throw new VoiceOTPException("Failed while trying to access userRealm of the user", e);
+            throw new VoiceOTPException("Failed while trying to access userRealm of the user.", e);
         }
         return false;
     }
@@ -103,10 +103,10 @@ public class VoiceOTPUtils {
     /**
      * Update the mobile number (user attribute) in user's profile.
      *
-     * @param username  the Username
-     * @param attribute the Attribute
-     * @throws VoiceOTPException
-     * @throws UserStoreException
+     * @param username  the Username.
+     * @param attribute the Attribute.
+     * @throws VoiceOTPException Exception.
+     * @throws UserStoreException Exception.
      */
     public static void updateUserAttribute(String username, Map<String, String> attribute, String tenantDomain)
             throws VoiceOTPException, UserStoreException {
@@ -131,8 +131,8 @@ public class VoiceOTPUtils {
     /**
      * Verify whether user Exist in the user store or not.
      *
-     * @param username the Username
-     * @throws VoiceOTPException
+     * @param username The Username.
+     * @throws VoiceOTPException Exception.
      */
     public static void verifyUserExists(String username, String tenantDomain) throws VoiceOTPException,
             AuthenticationFailedException {
@@ -160,9 +160,9 @@ public class VoiceOTPUtils {
     /**
      * Get the user realm of the logged in user.
      *
-     * @param tenantDomain The tenantDomain
-     * @return The user realm
-     * @throws AuthenticationFailedException
+     * @param tenantDomain The tenantDomain.
+     * @return The user realm.
+     * @throws AuthenticationFailedException Exception.
      */
     public static UserRealm getUserRealm(String tenantDomain) throws AuthenticationFailedException {
 
@@ -181,9 +181,9 @@ public class VoiceOTPUtils {
     /**
      * Get the mobile number for Username.
      *
-     * @param username The username
-     * @return Mobile number
-     * @throws VoiceOTPException
+     * @param username The username.
+     * @return Mobile number.
+     * @throws VoiceOTPException Exception.
      */
     public static String getMobileNumberForUsername(String username) throws VoiceOTPException,
             AuthenticationFailedException {
@@ -209,8 +209,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether VoiceOTP is mandatory or not.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean isVoiceOTPMandatory(AuthenticationContext context) {
 
@@ -220,8 +220,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether admin enable to send otp directly to mobile number or not.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean isSendOTPDirectlyToMobile(AuthenticationContext context) {
 
@@ -231,8 +231,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether admin enable to send otp directly to mobile number which gets from federated idp claims.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean sendOtpToFederatedMobile(AuthenticationContext context) {
 
@@ -254,8 +254,8 @@ public class VoiceOTPUtils {
      * Check whether admin enable to enter and update a mobile number in user profile when user forgets to register
      * the mobile number or not.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean isEnableMobileNoUpdate(AuthenticationContext context) {
 
@@ -265,8 +265,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether resend functionality enable or not.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean isEnableResendCode(AuthenticationContext context) {
 
@@ -276,8 +276,8 @@ public class VoiceOTPUtils {
     /**
      * Get the error page url from the application-authentication.xml file.
      *
-     * @param context The AuthenticationContext
-     * @return errorPage
+     * @param context The AuthenticationContext.
+     * @return errorPage.
      */
     public static String getErrorPageFromXMLFile(AuthenticationContext context) {
 
@@ -287,8 +287,8 @@ public class VoiceOTPUtils {
     /**
      * Get the login page url from the application-authentication.xml file.
      *
-     * @param context The AuthenticationContext
-     * @return loginPage
+     * @param context The AuthenticationContext.
+     * @return loginPage.
      */
     public static String getLoginPageFromXMLFile(AuthenticationContext context) {
 
@@ -298,8 +298,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether retry functionality enable or not.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean isRetryEnabled(AuthenticationContext context) {
 
@@ -309,8 +309,8 @@ public class VoiceOTPUtils {
     /**
      * Get the mobile number request page url from the application-authentication.xml file.
      *
-     * @param context The AuthenticationContext
-     * @return mobile number request page
+     * @param context The AuthenticationContext.
+     * @return mobile number request page.
      */
     public static String getMobileNumberRequestPage(AuthenticationContext context) {
 
@@ -320,8 +320,8 @@ public class VoiceOTPUtils {
     /**
      * Get the screen user attribute.
      *
-     * @param context The AuthenticationContext
-     * @return screenUserAttribute
+     * @param context The AuthenticationContext.
+     * @return screenUserAttribute.
      */
     public static String getScreenUserAttribute(AuthenticationContext context) {
 
@@ -331,8 +331,8 @@ public class VoiceOTPUtils {
     /**
      * Check the number of digits of claim value to show in UI.
      *
-     * @param context The AuthenticationContext
-     * @return noOfDigits
+     * @param context The AuthenticationContext.
+     * @return noOfDigits.
      */
     public static String getNoOfDigits(AuthenticationContext context) {
 
@@ -342,8 +342,8 @@ public class VoiceOTPUtils {
     /**
      * Check the order whether first number or last of n digits.
      *
-     * @param context The AuthenticationContext
-     * @return digitsOrder
+     * @param context The AuthenticationContext.
+     * @return digitsOrder.
      */
     public static String getDigitsOrder(AuthenticationContext context) {
 
@@ -353,8 +353,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether admin allows to use the backup codes or not.
      *
-     * @param context The AuthenticationContext
-     * @return backupCode
+     * @param context The AuthenticationContext.
+     * @return backupCode.
      */
     public static String getBackupCode(AuthenticationContext context) {
 
@@ -391,8 +391,8 @@ public class VoiceOTPUtils {
     /**
      * Check whether admin allows to generate the alphanumeric token or not.
      *
-     * @param context The AuthenticationContext
-     * @return true or false
+     * @param context The AuthenticationContext.
+     * @return true or false.
      */
     public static boolean isEnableAlphanumericToken(AuthenticationContext context) {
 
@@ -402,8 +402,8 @@ public class VoiceOTPUtils {
     /**
      * Get the token expiry time.
      *
-     * @param context The AuthenticationContext
-     * @return tokenExpiryTime
+     * @param context The AuthenticationContext.
+     * @return tokenExpiryTime.
      */
     public static String getTokenExpiryTime(AuthenticationContext context) {
 
@@ -413,8 +413,8 @@ public class VoiceOTPUtils {
     /**
      * Get the token length.
      *
-     * @param context The AuthenticationContext
-     * @return tokenLength
+     * @param context The AuthenticationContext.
+     * @return tokenLength.
      */
     public static String getTokenLength(AuthenticationContext context) {
 
@@ -511,7 +511,7 @@ public class VoiceOTPUtils {
                             }, tenantDomain);
         } catch (Exception e) {
             throw new AuthenticationFailedException("Error occurred while retrieving account lock connector " +
-                    "configuration", e);
+                    "configuration.", e);
         }
 
         return connectorConfigs;
