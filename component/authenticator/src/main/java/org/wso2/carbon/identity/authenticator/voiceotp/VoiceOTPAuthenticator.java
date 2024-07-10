@@ -133,18 +133,18 @@ public class VoiceOTPAuthenticator extends AbstractApplicationAuthenticator
         if (context.isLogoutRequest()) {
             return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
         } else if (StringUtils.isNotEmpty(request.getParameter(VoiceOTPConstants.MOBILE_NUMBER))) {
-            // if the request comes with MOBILE_NUMBER, it will go through this flow.
+            // If the request comes with MOBILE_NUMBER, it will go through this flow.
             initiateAuthenticationRequest(request, response, context);
             return AuthenticatorFlowStatus.INCOMPLETE;
         } else if (StringUtils.isEmpty(request.getParameter(VoiceOTPConstants.CODE))) {
-            // if the request doesn't have code, it will go through this flow.
+            // If the request doesn't have code, it will go through this flow.
             initiateAuthenticationRequest(request, response, context);
             if (context.getProperty(VoiceOTPConstants.AUTHENTICATION)
                     .equals(VoiceOTPConstants.AUTHENTICATOR_NAME)) {
-                // if the request comes with authentication is VoiceOTP, it will go through this flow.
+                // If the request comes with authentication is VoiceOTP, it will go through this flow.
                 return AuthenticatorFlowStatus.INCOMPLETE;
             } else {
-                // if the request comes with authentication as any other authenticator name, complete the flow.
+                // If the request comes with authentication as any other authenticator name, complete the flow.
                 return AuthenticatorFlowStatus.SUCCESS_COMPLETED;
             }
         } else {
