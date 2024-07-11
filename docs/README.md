@@ -2,6 +2,9 @@
 
 The VoiceOTP authenticator allows you to authenticate user via otp which is delivered as a call to the user's mobile number configured.
 
+# Setup
+
+Download the org.wso2.carbon.extension.identity.authenticator.voiceotp.connector-{version}.jar and place it in <IS_HOME>/repository/components/dropins directory
 
 # File based Configurations 
 
