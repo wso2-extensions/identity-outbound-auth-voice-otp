@@ -491,5 +491,6 @@
         <osgi.framework.imp.pkg.version.range>[1.7.0, 2.0.0)</osgi.framework.imp.pkg.version.range>
         <commons-lang.version.range>[2.6.0,4.0.0)</commons-lang.version.range>
         <commons-logging.osgi.version.range>[1.2.0, 2.0.0)</commons-logging.osgi.version.range>
+        <project.scm.id>wso2-scm-server</project.scm.id>
     </properties>
 </project>
