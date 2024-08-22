@@ -365,6 +365,34 @@ public class VoiceOTPUtils {
      * @param context Authentication Context.
      * @return True if UseInternalError codes is enabled, else return false.
      */
+    public static boolean useInternalErrorCodes(AuthenticationContext context) {
+
+        String useSMSProviderCodesConfig = getConfiguration(context, VoiceOTPConstants.USE_INTERNAL_ERROR_CODES);
+        if (StringUtils.isNotEmpty(useSMSProviderCodesConfig)) {
+            useInternalErrorCodes = Boolean.parseBoolean(useSMSProviderCodesConfig);
+            if (log.isDebugEnabled()) {
+                log.debug("UseInternalErrorCodes config is enabled in SMS-OTP Authenticator configuration");
+            }
+        }
+        return useInternalErrorCodes;
+    }
+
+    /**
+     * Return the value for UseInternalErrorCodes.
+     *
+     * @return useInternalErrorCodes.
+     */
+    public static boolean useInternalErrorCodes() {
+
+        return useInternalErrorCodes;
+    }
+
+    /**
+     * Check whether using internal error codes is supported.
+     *
+     * @param context Authentication Context.
+     * @return True if UseInternalError codes is enabled, else return false.
+     */
     public static boolean isUseInternalErrorCodes(AuthenticationContext context) {
 
         String useVoiceProviderCodesConfig = getConfiguration(context, VoiceOTPConstants.USE_INTERNAL_ERROR_CODES);
