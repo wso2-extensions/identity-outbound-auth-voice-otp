@@ -222,7 +222,7 @@ public class OneTimePasswordUtils {
      * @param isEnableAlphanumericToken A flag that indicates the token is alphanumeric or not.
      * @return the generated token.
      */
-    public String generateToken(String key, String base,
+    public static String generateToken(String key, String base,
                                 int digits, boolean isEnableAlphanumericToken) throws AuthenticationFailedException {
 
         int truncOffset = 0;
