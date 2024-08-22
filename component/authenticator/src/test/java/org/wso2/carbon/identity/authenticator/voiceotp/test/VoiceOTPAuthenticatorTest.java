@@ -20,7 +20,11 @@ package org.wso2.carbon.identity.authenticator.voiceotp.test;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.Spy;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 import org.owasp.encoder.Encode;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -798,7 +802,6 @@ public class VoiceOTPAuthenticatorTest {
 
         Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getOTPSeparationCharacters",
                 context),"%2B");
-
     }
 
     @Test
@@ -808,7 +811,6 @@ public class VoiceOTPAuthenticatorTest {
         PowerMockito.when(context.getAuthenticatorProperties().get(OTP_SEPARATOR)).thenReturn("%20");
         Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getOTPSeparationCharacters",
                 context),"%20");
-
     }
 
     @Test
@@ -816,7 +818,6 @@ public class VoiceOTPAuthenticatorTest {
 
         Assert.assertEquals(Integer.toString(Whitebox.invokeMethod(authenticator, "getDivisor",
                 context)),"1");
-
     }
 
     @Test
@@ -957,7 +958,6 @@ public class VoiceOTPAuthenticatorTest {
 
 
         authenticator.sendRESTCall(context,voiceURL,httpMethod,header,payload,httpResponse,"+94713933424","123456");
-
     }
 
     @Test
@@ -1070,7 +1070,6 @@ public class VoiceOTPAuthenticatorTest {
         Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticationContext.class);
         method.setAccessible(true);
         method.invoke(instance, args);
-
     }
 
     @Test(expectedExceptions=Exception.class)
@@ -1136,7 +1135,6 @@ public class VoiceOTPAuthenticatorTest {
         Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticationContext.class);
         method.setAccessible(true);
         method.invoke(instance, args);
-
     }
     @Test(expectedExceptions = Exception.class)
     public void testGetUnlockTimeInMilliSecondsWhenUserRealmIsNull() throws Exception {
@@ -1157,7 +1155,6 @@ public class VoiceOTPAuthenticatorTest {
         Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticatedUser.class);
         method.setAccessible(true);
         method.invoke(instance, args);
-
     }
 
     @Test
@@ -1189,7 +1186,6 @@ public class VoiceOTPAuthenticatorTest {
         Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticatedUser.class);
         method.setAccessible(true);
         return method.invoke(instance, args);
-
     }
 
     @Test(expectedExceptions = Exception.class)
@@ -1199,7 +1195,6 @@ public class VoiceOTPAuthenticatorTest {
         PowerMockito.when(context.getProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME)).thenReturn(otpTime);
 
         invokeProcessValidUserTokenPrivateMethod(authenticator,"processValidUserToken",context,authenticatedUser);
-
     }
 
     @Test
@@ -1209,7 +1204,6 @@ public class VoiceOTPAuthenticatorTest {
         PowerMockito.when(context.getProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME)).thenReturn(otpTime);
 
         invokeProcessValidUserTokenPrivateMethod(authenticator,"processValidUserToken",context,authenticatedUser);
-
     }
 
     private void invokeProcessValidUserTokenPrivateMethod(Object instance, String methodName, Object... args) throws Exception {
@@ -1217,7 +1211,6 @@ public class VoiceOTPAuthenticatorTest {
         Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticationContext.class,AuthenticatedUser.class);
         method.setAccessible(true);
         method.invoke(instance, args);
-
     }
 
     @ObjectFactory
