@@ -1,0 +1,20 @@
+{
+  "name": "VOICEOTP",
+  "owner": "WSO2",
+  "category": "Local authenticator",
+  "documentationUrl": "https://github.com/wso2-extensions/identity-outbound-auth-voice-otp/tree/main/docs",
+  "description": "The VoiceOTP authenticator allows you to authenticate a user via OTP, which is delivered as a call to the user's configured mobile number. This authenticator can be used for MFA in the Identity Server.",
+  "status": "Active",
+  "labels": [
+    "Twofactor",
+    "Token"
+  ],
+  "releases": [
+    {
+      "tagName": "v1.0.1",
+      "products": [
+        "IS 6.1.0"
+      ]
+    }
+  ]
+}
