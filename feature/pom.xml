@@ -17,10 +17,10 @@
     <parent>
         <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.voiceotp</groupId>
         <artifactId>identity-outbound-auth-voice-otp</artifactId>
-        <version>1.0.2-SNAPSHOT</version>
+        <version>1.0.2</version>
     </parent>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.voiceotp.feature</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.2</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon - identity Voice OTP Feature</name>
     <url>http://wso2.org</url>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.wso2.carbon.extension.identity.authenticator.outbound.voiceotp</groupId>
             <artifactId>org.wso2.carbon.extension.identity.authenticator.voiceotp.connector</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
 
