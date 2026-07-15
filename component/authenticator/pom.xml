@@ -39,18 +39,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito2</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-testng</artifactId>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -70,8 +60,9 @@
             <artifactId>org.wso2.carbon.identity.event</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.ds-annotations</artifactId>
+            <groupId>org.eclipse.platform</groupId>
+            <artifactId>org.eclipse.osgi.services</artifactId>
+            <version>3.12.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -109,7 +100,12 @@
                             org.apache.commons.logging.*; version="${commons-logging.osgi.version.range}",
                             org.osgi.framework,
                             org.osgi.service.component; version="${osgi.service.import.version.range}",
-                            org.wso2.carbon.identity.application.authentication.framework.*,
+                            org.wso2.carbon.identity.application.authentication.framework.*;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.application.common.*;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
+                            org.wso2.carbon.identity.core.*;
+                            version="${carbon.identity.framework.imp.pkg.version.range}",
                             javax.servlet,
                             javax.servlet.http,
                             org.wso2.carbon.extension.identity.helper.*;

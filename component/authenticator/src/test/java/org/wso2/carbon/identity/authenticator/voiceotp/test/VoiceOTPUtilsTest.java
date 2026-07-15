@@ -19,15 +19,13 @@
 package org.wso2.carbon.identity.authenticator.voiceotp.test;
 
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockObjectFactory;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.extension.identity.helper.IdentityHelperConstants;
 import org.wso2.carbon.identity.application.authentication.framework.config.builder.FileBasedConfigurationBuilder;
@@ -50,11 +48,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
-@PrepareForTest({FileBasedConfigurationBuilder.class, IdentityTenantUtil.class})
-@PowerMockIgnore({"org.mockito.*"})
 public class VoiceOTPUtilsTest {
 
     @Mock
@@ -72,20 +66,22 @@ public class VoiceOTPUtilsTest {
     @Spy
     private AuthenticationContext context;
 
+    private AutoCloseable mocks;
+    private MockedStatic<FileBasedConfigurationBuilder> mockedFileBasedConfigurationBuilder;
+    private MockedStatic<IdentityTenantUtil> mockedIdentityTenantUtil;
 
     @BeforeMethod
     public void setUp() throws Exception {
-        mockStatic(FileBasedConfigurationBuilder.class);
-        initMocks(this);
-    }
-
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-        return new PowerMockObjectFactory();
+        mocks = MockitoAnnotations.openMocks(this);
+        mockedFileBasedConfigurationBuilder = Mockito.mockStatic(FileBasedConfigurationBuilder.class);
+        mockedIdentityTenantUtil = Mockito.mockStatic(IdentityTenantUtil.class);
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
+        mockedFileBasedConfigurationBuilder.close();
+        mockedIdentityTenantUtil.close();
+        mocks.close();
     }
 
     @Test
@@ -108,7 +104,8 @@ public class VoiceOTPUtilsTest {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(VoiceOTPConstants.IS_VOICEOTP_MANDATORY, "true");
         parameters.put(VoiceOTPConstants.IS_ENABLED_RESEND, "true");
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        mockedFileBasedConfigurationBuilder.when(FileBasedConfigurationBuilder::getInstance)
+                .thenReturn(fileBasedConfigurationBuilder);
         authenticatorConfig.setParameterMap(parameters);
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         Assert.assertEquals(VoiceOTPUtils.getConfiguration(authenticationContext,
@@ -236,7 +233,8 @@ public class VoiceOTPUtilsTest {
         AuthenticatorConfig authenticatorConfig = new AuthenticatorConfig();
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(VoiceOTPConstants.IS_VOICEOTP_MANDATORY, "true");
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        mockedFileBasedConfigurationBuilder.when(FileBasedConfigurationBuilder::getInstance)
+                .thenReturn(fileBasedConfigurationBuilder);
         authenticatorConfig.setParameterMap(parameters);
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         Assert.assertEquals(VoiceOTPUtils.isVoiceOTPMandatory(authenticationContext), true);
@@ -272,13 +270,12 @@ public class VoiceOTPUtilsTest {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.put(VoiceOTPConstants.IS_VOICEOTP_MANDATORY, "true");
         parameters.put(VoiceOTPConstants.IS_SEND_OTP_DIRECTLY_TO_MOBILE, "false");
-        when(FileBasedConfigurationBuilder.getInstance()).thenReturn(fileBasedConfigurationBuilder);
+        mockedFileBasedConfigurationBuilder.when(FileBasedConfigurationBuilder::getInstance)
+                .thenReturn(fileBasedConfigurationBuilder);
 
-        //test with empty parameters map.
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(null);
         Assert.assertEquals(VoiceOTPUtils.getVoiceParameters(), Collections.emptyMap());
 
-        //test with non-empty parameters map.
         authenticatorConfig.setParameterMap(parameters);
         when(fileBasedConfigurationBuilder.getAuthenticatorBean(anyString())).thenReturn(authenticatorConfig);
         Assert.assertEquals(VoiceOTPUtils.getVoiceParameters(), parameters);
@@ -287,13 +284,11 @@ public class VoiceOTPUtilsTest {
     @Test
     public void testIsVoiceOTPDisableForLocalUser() throws UserStoreException, AuthenticationFailedException,
             VoiceOTPException {
-        mockStatic(IdentityTenantUtil.class);
         String username = "admin";
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        when(VoiceOTPUtils.isVoiceOTPEnabledByUser(context)).thenReturn(true);
         Map<String, String> claims = new HashMap<>();
         claims.put(VoiceOTPConstants.USER_VOICEOTP_DISABLED_CLAIM_URI, "false");
         userStoreManager.setUserClaimValues(MultitenantUtils.getTenantAwareUsername(username), claims, null);
@@ -302,11 +297,9 @@ public class VoiceOTPUtilsTest {
 
     @Test(expectedExceptions = {VoiceOTPException.class})
     public void testVerifyUserExists() throws UserStoreException, AuthenticationFailedException, VoiceOTPException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        when(VoiceOTPUtils.getUserRealm("carbon.super")).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         VoiceOTPUtils.verifyUserExists("admin", "carbon.super");
     }
@@ -314,9 +307,8 @@ public class VoiceOTPUtilsTest {
     @Test
     public void testGetMobileNumberForUsername() throws UserStoreException, VoiceOTPException,
             AuthenticationFailedException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         Assert.assertEquals(VoiceOTPUtils.getMobileNumberForUsername("admin"), null);
@@ -325,18 +317,16 @@ public class VoiceOTPUtilsTest {
     @Test(expectedExceptions = {VoiceOTPException.class})
     public void testGetMobileNumberForUsernameWithException() throws UserStoreException, VoiceOTPException,
             AuthenticationFailedException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
         VoiceOTPUtils.getMobileNumberForUsername("admin");
     }
 
     @Test(expectedExceptions = {VoiceOTPException.class})
     public void testUpdateUserAttributeWithException() throws UserStoreException, VoiceOTPException {
-        mockStatic(IdentityTenantUtil.class);
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
         Map<String, String> claims = new HashMap<>();
         VoiceOTPUtils.updateUserAttribute(anyString(), claims, "carbon.super");
@@ -344,10 +334,9 @@ public class VoiceOTPUtilsTest {
 
     @Test
     public void testUpdateUserAttribute() throws UserStoreException, VoiceOTPException {
-        mockStatic(IdentityTenantUtil.class);
         Map<String, String> claims = new HashMap<>();
-        when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
         when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
         when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         when(userStoreManager.isExistingUser(anyString())).thenReturn(true);

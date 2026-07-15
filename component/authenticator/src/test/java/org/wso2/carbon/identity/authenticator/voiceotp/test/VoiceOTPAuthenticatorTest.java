@@ -19,24 +19,17 @@
 package org.wso2.carbon.identity.authenticator.voiceotp.test;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.runner.RunWith;
-import org.mockito.Spy;
-import org.mockito.Mock;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.mockito.ArgumentCaptor;
 import org.owasp.encoder.Encode;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.testng.PowerMockObjectFactory;
-import org.powermock.reflect.Whitebox;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.extension.identity.helper.FederatedAuthenticatorUtil;
 import org.wso2.carbon.identity.application.authentication.framework.AuthenticatorFlowStatus;
@@ -76,32 +69,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.crypto.Mac;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.REQUESTED_USER_MOBILE;
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.DIVISOR;
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.OTP_SEPARATOR;
 import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.POST_METHOD;
+import static org.wso2.carbon.identity.authenticator.voiceotp.VoiceOTPConstants.REQUESTED_USER_MOBILE;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ConfigurationFacade.class, VoiceOTPUtils.class, FederatedAuthenticatorUtil.class, FrameworkUtils.class,
-        IdentityTenantUtil.class, VoiceOTPServiceDataHolder.class,MultitenantUtils.class,URL.class,
-        OneTimePasswordUtils.class,Mac.class,UserStoreManager.class})
-@PowerMockIgnore({"org.wso2.carbon.identity.application.common.model.User", "org.mockito.*", "javax.servlet.*",
-        "javax.net.ssl.*", "sun.net.www.protocol.https.*"})
 public class VoiceOTPAuthenticatorTest {
 
-    private static final long otpTime = 1608101321322l;
+    private static final long otpTime = 1608101321322L;
+
     @Spy
     private AuthenticationContext context;
     @Mock
@@ -116,142 +101,180 @@ public class VoiceOTPAuthenticatorTest {
     private UserRealm userRealm;
     @Mock
     private RealmService realmService;
-    @Mock private ClaimManager claimManager;
-    @Mock private Claim claim;
-    @Mock private AuthenticatedUser authenticatedUser;
-    @Mock private Map<String, String> authenticatorProperties;
-    @Mock private HttpURLConnection httpURLConnection;
+    @Mock
+    private ClaimManager claimManager;
+    @Mock
+    private Claim claim;
+    @Mock
+    private AuthenticatedUser authenticatedUser;
+    @Mock
+    private Map<String, String> authenticatorProperties;
+    @Mock
+    private HttpURLConnection httpURLConnection;
     @InjectMocks
     private VoiceOTPAuthenticator authenticator = new VoiceOTPAuthenticator();
 
+    private AutoCloseable mocks;
+    private MockedStatic<MultitenantUtils> mockedMultitenantUtils;
+    private MockedStatic<VoiceOTPUtils> mockedVoiceOTPUtils;
+    private MockedStatic<OneTimePasswordUtils> mockedOneTimePasswordUtils;
+    private MockedStatic<FederatedAuthenticatorUtil> mockedFederatedAuthenticatorUtil;
+    private MockedStatic<IdentityTenantUtil> mockedIdentityTenantUtil;
+    private MockedStatic<ConfigurationFacade> mockedConfigurationFacade;
+    private MockedStatic<FrameworkUtils> mockedFrameworkUtils;
+    private MockedStatic<IdentityUtil> mockedIdentityUtil;
+
     @BeforeMethod
     public void setUp() {
-
-        initMocks(this);
-        PowerMockito.mockStatic(MultitenantUtils.class);
-        PowerMockito.mockStatic(VoiceOTPUtils.class);
-        PowerMockito.mockStatic(OneTimePasswordUtils.class);
-        PowerMockito.mockStatic(FederatedAuthenticatorUtil.class);
-        PowerMockito.mockStatic(IdentityTenantUtil.class);
-
+        mocks = MockitoAnnotations.openMocks(this);
+        mockedMultitenantUtils = Mockito.mockStatic(MultitenantUtils.class);
+        mockedVoiceOTPUtils = Mockito.mockStatic(VoiceOTPUtils.class);
+        mockedOneTimePasswordUtils = Mockito.mockStatic(OneTimePasswordUtils.class);
+        mockedFederatedAuthenticatorUtil = Mockito.mockStatic(FederatedAuthenticatorUtil.class);
+        mockedIdentityTenantUtil = Mockito.mockStatic(IdentityTenantUtil.class);
+        mockedConfigurationFacade = Mockito.mockStatic(ConfigurationFacade.class);
+        mockedFrameworkUtils = Mockito.mockStatic(FrameworkUtils.class);
+        mockedIdentityUtil = Mockito.mockStatic(IdentityUtil.class);
     }
 
     @AfterMethod
     public void tearDown() throws Exception {
+        mockedMultitenantUtils.close();
+        mockedVoiceOTPUtils.close();
+        mockedOneTimePasswordUtils.close();
+        mockedFederatedAuthenticatorUtil.close();
+        mockedIdentityTenantUtil.close();
+        mockedConfigurationFacade.close();
+        mockedFrameworkUtils.close();
+        mockedIdentityUtil.close();
+        mocks.close();
     }
 
     @Test
     public void testGetFriendlyName() {
-        
         Assert.assertEquals(authenticator.getFriendlyName(), VoiceOTPConstants.AUTHENTICATOR_FRIENDLY_NAME);
     }
 
     @Test
     public void testGetName() {
-        
         Assert.assertEquals(authenticator.getName(), VoiceOTPConstants.AUTHENTICATOR_NAME);
     }
 
     @Test
     public void testRetryAuthenticationEnabled() throws Exception {
-        
-        VoiceOTPAuthenticator voiceotp = PowerMockito.spy(authenticator);
-        Assert.assertTrue((Boolean) Whitebox.invokeMethod(voiceotp, "retryAuthenticationEnabled"));
+        VoiceOTPAuthenticator voiceotp = Mockito.spy(authenticator);
+        Assert.assertTrue((Boolean) invokePrivateMethod(voiceotp, "retryAuthenticationEnabled"));
     }
 
     @Test
     public void testGetContextIdentifierPassed() {
-        
-        PowerMockito.when(httpServletRequest.getParameter(FrameworkConstants.SESSION_DATA_KEY)).thenReturn
-                ("0246893");
+        Mockito.when(httpServletRequest.getParameter(FrameworkConstants.SESSION_DATA_KEY)).thenReturn("0246893");
         Assert.assertEquals(authenticator.getContextIdentifier(httpServletRequest), "0246893");
     }
 
     @Test
     public void testCanHandleTrue() {
-        
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn(null);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn("resendCode");
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn(null);
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn("resendCode");
         Assert.assertEquals(authenticator.canHandle(httpServletRequest), true);
     }
 
     @Test
     public void testCanHandleFalse() {
-        
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn(null);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn(null);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.MOBILE_NUMBER)).thenReturn(null);
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn(null);
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn(null);
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.MOBILE_NUMBER)).thenReturn(null);
         Assert.assertEquals(authenticator.canHandle(httpServletRequest), false);
     }
 
     @Test
+    public void testCanHandleWithCode() {
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
+        Assert.assertEquals(authenticator.canHandle(httpServletRequest), true);
+    }
+
+    @Test
+    public void testCanHandleWithMobileNumber() {
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn(null);
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn(null);
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.MOBILE_NUMBER)).thenReturn("0771234567");
+        Assert.assertEquals(authenticator.canHandle(httpServletRequest), true);
+    }
+
+    @Test
+    public void testGetCorrelationId() {
+        String correlationId = VoiceOTPAuthenticator.getCorrelationId();
+        Assert.assertNotNull(correlationId);
+
+        org.slf4j.MDC.put(VoiceOTPConstants.CORRELATION_ID_MDC, "test-correlation-id");
+        try {
+            Assert.assertEquals(VoiceOTPAuthenticator.getCorrelationId(), "test-correlation-id");
+        } finally {
+            org.slf4j.MDC.remove(VoiceOTPConstants.CORRELATION_ID_MDC);
+        }
+    }
+
+    @Test
     public void testGetURL() throws Exception {
-        
-        VoiceOTPAuthenticator voiceotp = PowerMockito.spy(authenticator);
-        Assert.assertEquals(Whitebox.invokeMethod(voiceotp, "getURL",
+        VoiceOTPAuthenticator voiceotp = Mockito.spy(authenticator);
+        Assert.assertEquals(invokePrivateMethod(voiceotp, "getURL",
+                new Class[]{String.class, String.class},
                 VoiceOTPConstants.LOGIN_PAGE, null),
                 "authenticationendpoint/login.do?authenticators=VoiceOTP");
     }
 
     @Test
     public void testGetURLwithQueryParams() throws Exception {
-        
-        VoiceOTPAuthenticator voiceotp = PowerMockito.spy(authenticator);
-        Assert.assertEquals(Whitebox.invokeMethod(voiceotp, "getURL",
+        VoiceOTPAuthenticator voiceotp = Mockito.spy(authenticator);
+        Assert.assertEquals(invokePrivateMethod(voiceotp, "getURL",
+                new Class[]{String.class, String.class},
                 VoiceOTPConstants.LOGIN_PAGE, "n=John&n=Susan"),
                 "authenticationendpoint/login.do?n=John&n=Susan&authenticators=VoiceOTP");
     }
 
-
     @Test
     public void testGetMobileNumber() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(VoiceOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0775968325");
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getMobileNumber",
-                httpServletRequest, response, any(AuthenticationContext.class),
-                "Kanapriya", "queryParams"), "0775968325");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0775968325");
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getMobileNumber",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class,
+                        AuthenticationContext.class, String.class, String.class},
+                httpServletRequest, response, context, "Kanapriya", "queryParams"), "0775968325");
     }
 
     @Test
     public void testGetLoginPage() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(ConfigurationFacade.class);
-        PowerMockito.when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
-        PowerMockito.when(configurationFacade.getAuthenticationEndpointURL())
+        mockedConfigurationFacade.when(ConfigurationFacade::getInstance).thenReturn(configurationFacade);
+        Mockito.when(configurationFacade.getAuthenticationEndpointURL())
                 .thenReturn("/authenticationendpoint/login.do");
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).thenReturn(null);
-        Assert.assertNotEquals(Whitebox.invokeMethod(authenticator, "getLoginPage",
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(null);
+        Assert.assertNotEquals(invokePrivateMethod(authenticator, "getLoginPage",
                 new AuthenticationContext()), "/authenticationendpoint/login.do");
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getLoginPage",
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getLoginPage",
                 new AuthenticationContext()), "/authenticationendpoint/voiceOtp.jsp");
     }
 
     @Test
     public void testGetErrorPage() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(ConfigurationFacade.class);
-        PowerMockito.when(ConfigurationFacade.getInstance()).thenReturn(configurationFacade);
-        PowerMockito.when(configurationFacade.getAuthenticationEndpointURL())
+        mockedConfigurationFacade.when(ConfigurationFacade::getInstance).thenReturn(configurationFacade);
+        Mockito.when(configurationFacade.getAuthenticationEndpointURL())
                 .thenReturn("/authenticationendpoint/login.do");
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).thenReturn(null);
-        Assert.assertNotEquals(Whitebox.invokeMethod(authenticator, "getErrorPage",
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(null);
+        Assert.assertNotEquals(invokePrivateMethod(authenticator, "getErrorPage",
                 new AuthenticationContext()), "/authenticationendpoint/login.do");
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getErrorPage",
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getErrorPage",
                 new AuthenticationContext()), "/authenticationendpoint/voiceOtpError.jsp");
     }
 
     @Test
     public void testRedirectToErrorPage() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(authenticationContext))
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(authenticationContext))
                 .thenReturn("/authenticationendpoint/voiceOtpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "redirectToErrorPage",
+        invokePrivateMethod(authenticator, "redirectToErrorPage",
+                new Class[]{HttpServletResponse.class, AuthenticationContext.class, String.class, String.class},
                 response, authenticationContext, null, null);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.AUTHENTICATOR_NAME));
@@ -259,14 +282,13 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testRedirectToMobileNumberReqPage() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
         AuthenticationContext authenticationContext = new AuthenticationContext();
-        PowerMockito.when(VoiceOTPUtils.isEnableMobileNoUpdate(authenticationContext)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getMobileNumberRequestPage(authenticationContext))
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isEnableMobileNoUpdate(authenticationContext)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getMobileNumberRequestPage(authenticationContext))
                 .thenReturn("/authenticationendpoint/mobile.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "redirectToMobileNoReqPage",
+        invokePrivateMethod(authenticator, "redirectToMobileNoReqPage",
+                new Class[]{HttpServletResponse.class, AuthenticationContext.class, String.class},
                 response, authenticationContext, null);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.AUTHENTICATOR_NAME));
@@ -274,14 +296,13 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCode() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
         context.setProperty(VoiceOTPConstants.STATUS_CODE, "");
-        PowerMockito.when(VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/authenticationendpoint/voiceOtpError.jsp");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn("/authenticationendpoint/voiceOtpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "checkStatusCode",
+        invokePrivateMethod(authenticator, "checkStatusCode",
+                new Class[]{HttpServletResponse.class, AuthenticationContext.class, String.class, String.class},
                 response, context, null, VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.AUTHENTICATOR_NAME));
@@ -289,14 +310,13 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCodeWithNullValue() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
         context.setProperty(VoiceOTPConstants.STATUS_CODE, null);
-        PowerMockito.when(VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/authenticationendpoint/voiceOtp.jsp");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn("/authenticationendpoint/voiceOtp.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "checkStatusCode",
+        invokePrivateMethod(authenticator, "checkStatusCode",
+                new Class[]{HttpServletResponse.class, AuthenticationContext.class, String.class, String.class},
                 response, context, null, VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.AUTHENTICATOR_NAME));
@@ -304,15 +324,14 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCodeWithMismatch() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
         context.setProperty(VoiceOTPConstants.CODE_MISMATCH, "true");
-        PowerMockito.when(VoiceOTPUtils.isRetryEnabled(context)).thenReturn(false);
-        PowerMockito.when(VoiceOTPUtils.isEnableResendCode(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/authenticationendpoint/voiceOtpError.jsp");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isRetryEnabled(context)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isEnableResendCode(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn("/authenticationendpoint/voiceOtpError.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "checkStatusCode",
+        invokePrivateMethod(authenticator, "checkStatusCode",
+                new Class[]{HttpServletResponse.class, AuthenticationContext.class, String.class, String.class},
                 response, context, null, VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.ERROR_CODE_MISMATCH));
@@ -320,15 +339,14 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testCheckStatusCodeWithTokenExpired() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
         context.setProperty(VoiceOTPConstants.TOKEN_EXPIRED, "token.expired");
-        PowerMockito.when(VoiceOTPUtils.isEnableResendCode(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn("/authenticationendpoint/voiceOtp.jsp");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isEnableResendCode(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn("/authenticationendpoint/voiceOtp.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "checkStatusCode",
+        invokePrivateMethod(authenticator, "checkStatusCode",
+                new Class[]{HttpServletResponse.class, AuthenticationContext.class, String.class, String.class},
                 response, context, null, VoiceOTPConstants.VOICE_LOGIN_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.TOKEN_EXPIRED_VALUE));
@@ -336,83 +354,81 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testProcessVoiceOTPFlow() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(VoiceOTPUtils.isVoiceOTPDisableForLocalUser("John", context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(VoiceOTPConstants.ERROR_PAGE);
-        PowerMockito.when(VoiceOTPUtils.isEnableMobileNoUpdate(any(AuthenticationContext.class))).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isVoiceOTPDisableForLocalUser("John@carbon.super", context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isEnableMobileNoUpdate(any(AuthenticationContext.class)))
+                .thenReturn(true);
         context.setProperty(VoiceOTPConstants.MOBILE_NUMBER_UPDATE_FAILURE, "true");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "processVoiceOTPFlow", context,
-                httpServletRequest, response, true, "John@carbon.super", "", "carbon.super", VoiceOTPConstants
-                        .ERROR_PAGE);
+        invokePrivateMethod(authenticator, "processVoiceOTPFlow",
+                new Class[]{AuthenticationContext.class, HttpServletRequest.class, HttpServletResponse.class,
+                        boolean.class, String.class, String.class, String.class, String.class},
+                context, httpServletRequest, response, true, "John@carbon.super", "", "carbon.super",
+                VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.AUTHENTICATOR_NAME));
     }
 
     @Test
     public void testSendOTPDirectlyToMobile() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getMobileNumberRequestPage(any(AuthenticationContext.class))).
-                thenReturn("/authenticationendpoint/mobile.jsp");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getMobileNumberRequestPage(any(AuthenticationContext.class)))
+                .thenReturn("/authenticationendpoint/mobile.jsp");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "processVoiceOTPFlow", context,
-                httpServletRequest, response, false, "John@carbon.super", "", "carbon.super", VoiceOTPConstants
-                        .ERROR_PAGE);
+        invokePrivateMethod(authenticator, "processVoiceOTPFlow",
+                new Class[]{AuthenticationContext.class, HttpServletRequest.class, HttpServletResponse.class,
+                        boolean.class, String.class, String.class, String.class, String.class},
+                context, httpServletRequest, response, false, "John@carbon.super", "", "carbon.super",
+                VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.AUTHENTICATOR_NAME));
     }
 
     @Test
     public void testProcessVoiceOTPDisableFlow() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "processVoiceOTPFlow", context,
-                httpServletRequest, response, false, "John@carbon.super", "", "carbon.super", VoiceOTPConstants
-                        .ERROR_PAGE);
+        invokePrivateMethod(authenticator, "processVoiceOTPFlow",
+                new Class[]{AuthenticationContext.class, HttpServletRequest.class, HttpServletResponse.class,
+                        boolean.class, String.class, String.class, String.class, String.class},
+                context, httpServletRequest, response, false, "John@carbon.super", "", "carbon.super",
+                VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.SEND_OTP_DIRECTLY_DISABLE));
     }
 
     @Test
     public void testProcessWithLogoutTrue() throws AuthenticationFailedException, LogoutFailedException {
-        
-        PowerMockito.when(context.isLogoutRequest()).thenReturn(true);
+        doReturn(true).when(context).isLogoutRequest();
         AuthenticatorFlowStatus status = authenticator.process(httpServletRequest, response, context);
         Assert.assertEquals(status, AuthenticatorFlowStatus.SUCCESS_COMPLETED);
     }
 
     @Test
     public void testProcessWithLogoutFalse() throws Exception {
-        
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
-        PowerMockito.when(context.isLogoutRequest()).thenReturn(false);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.MOBILE_NUMBER)).thenReturn("true");
+        doReturn(false).when(context).isLogoutRequest();
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.MOBILE_NUMBER)).thenReturn("true");
         context.setTenantDomain("carbon.super");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.OTP_GENERATED_TIME)).thenReturn(otpTime);
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        PowerMockito.when(VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(VoiceOTPConstants.ERROR_PAGE);
-        PowerMockito.when(VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
-        PowerMockito.when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
-                context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
+        doReturn(otpTime).when(context).getProperty(VoiceOTPConstants.OTP_GENERATED_TIME);
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(context))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
+        mockedFrameworkUtils.when(() -> FrameworkUtils.getQueryStringWithFrameworkContextId(
+                context.getQueryParams(), context.getCallerSessionKey(), context.getContextIdentifier()))
+                .thenReturn(null);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "processVoiceOTPFlow", context,
-                httpServletRequest, response, false, "John@carbon.super", "", "carbon.super", VoiceOTPConstants
-                        .ERROR_PAGE);
+        invokePrivateMethod(authenticator, "processVoiceOTPFlow",
+                new Class[]{AuthenticationContext.class, HttpServletRequest.class, HttpServletResponse.class,
+                        boolean.class, String.class, String.class, String.class, String.class},
+                context, httpServletRequest, response, false, "John@carbon.super", "", "carbon.super",
+                VoiceOTPConstants.ERROR_PAGE);
         verify(response).sendRedirect(captor.capture());
         AuthenticatorFlowStatus status = authenticator.process(httpServletRequest, response, context);
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.SEND_OTP_DIRECTLY_DISABLE));
@@ -421,27 +437,23 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testProcessWithLogout() throws AuthenticationFailedException, LogoutFailedException {
-        
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
-        PowerMockito.when(context.isLogoutRequest()).thenReturn(false);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("");
+        doReturn(false).when(context).isLogoutRequest();
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("");
         context.setTenantDomain("carbon.super");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("testUser");
         authenticatedUser.setUserStoreDomain("secondary");
         context.setProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME, otpTime);
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        PowerMockito.when(VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(VoiceOTPConstants.ERROR_PAGE);
-        PowerMockito.when(VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
-        PowerMockito.when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
-                context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
-        PowerMockito.when(VoiceOTPUtils.getBackupCode(context)).thenReturn("false");
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(context))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
+        mockedFrameworkUtils.when(() -> FrameworkUtils.getQueryStringWithFrameworkContextId(
+                context.getQueryParams(), context.getCallerSessionKey(), context.getContextIdentifier()))
+                .thenReturn(null);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getBackupCode(context)).thenReturn("false");
 
         AuthenticatorFlowStatus status = authenticator.process(httpServletRequest, response, context);
         Assert.assertEquals(status, AuthenticatorFlowStatus.INCOMPLETE);
@@ -449,26 +461,23 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testInitiateAuthenticationRequestWithVoiceOTPMandatory() throws Exception {
-        
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        PowerMockito.when(VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(context)).thenReturn(VoiceOTPConstants.ERROR_PAGE);
-        PowerMockito.when(VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(VoiceOTPConstants.ERROR_PAGE);
-        PowerMockito.when(FrameworkUtils.getQueryStringWithFrameworkContextId(context.getQueryParams(),
-                context.getCallerSessionKey(), context.getContextIdentifier())).thenReturn(null);
-        PowerMockito.when(VoiceOTPUtils.getBackupCode(context)).thenReturn("false");
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(context))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isSendOTPDirectlyToMobile(context)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        mockedFrameworkUtils.when(() -> FrameworkUtils.getQueryStringWithFrameworkContextId(
+                context.getQueryParams(), context.getCallerSessionKey(), context.getContextIdentifier()))
+                .thenReturn(null);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getBackupCode(context)).thenReturn("false");
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "initiateAuthenticationRequest",
+        invokePrivateMethod(authenticator, "initiateAuthenticationRequest",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.SEND_OTP_DIRECTLY_DISABLE));
@@ -476,29 +485,26 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testInitiateAuthenticationRequestWithVoiceOTPOptional() throws Exception {
-        
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
         context.setProperty(VoiceOTPConstants.TOKEN_EXPIRED, "token.expired");
-        PowerMockito.when(context.isRetrying()).thenReturn(true);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn("false");
+        doReturn(true).when(context).isRetrying();
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn("false");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        PowerMockito.when(VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(false);
-        PowerMockito.when(VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
-        PowerMockito.when(FederatedAuthenticatorUtil.isUserExistInUserStore(anyString())).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getMobileNumberForUsername(anyString())).thenReturn("0778965320");
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(VoiceOTPConstants.LOGIN_PAGE);
-        PowerMockito.when(VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class))).
-                thenReturn(VoiceOTPConstants.ERROR_PAGE);
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isVoiceOTPMandatory(context)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isRetryEnabled(context)).thenReturn(true);
+        mockedFederatedAuthenticatorUtil.when(() -> FederatedAuthenticatorUtil.isUserExistInUserStore(anyString()))
+                .thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getMobileNumberForUsername(anyString()))
+                .thenReturn("0778965320");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(VoiceOTPConstants.LOGIN_PAGE);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getErrorPageFromXMLFile(any(AuthenticationContext.class)))
+                .thenReturn(VoiceOTPConstants.ERROR_PAGE);
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        Whitebox.invokeMethod(authenticator, "initiateAuthenticationRequest",
+        invokePrivateMethod(authenticator, "initiateAuthenticationRequest",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
         verify(response).sendRedirect(captor.capture());
         Assert.assertTrue(captor.getValue().contains(VoiceOTPConstants.TOKEN_EXPIRED_VALUE));
@@ -506,43 +512,34 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testInitiateAuthenticationRequestWithoutAuthenticatedUser() throws Exception {
-        
-        mockStatic(FederatedAuthenticatorUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(FrameworkUtils.class);
         context.setTenantDomain("carbon.super");
-        FederatedAuthenticatorUtil.setUsernameFromFirstStep(context);
-        Whitebox.invokeMethod(authenticator, "initiateAuthenticationRequest",
+        invokePrivateMethod(authenticator, "initiateAuthenticationRequest",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
     }
 
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithoutOTPCode() throws Exception {
-
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("");
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        Whitebox.invokeMethod(authenticator, "processAuthenticationResponse",
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        invokePrivateMethod(authenticator, "processAuthenticationResponse",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
     }
 
     @Test(expectedExceptions = {InvalidCredentialsException.class})
     public void testProcessAuthenticationResponseWithResend() throws Exception {
-
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn("true");
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        Whitebox.invokeMethod(authenticator, "processAuthenticationResponse",
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.RESEND)).thenReturn("true");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        invokePrivateMethod(authenticator, "processAuthenticationResponse",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
     }
 
     @Test
     public void testProcessAuthenticationResponse() throws Exception {
-
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(IdentityTenantUtil.class);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserId("4b4414e1-916b-4475-aaee-6b0751c29ff6");
@@ -552,61 +549,58 @@ public class VoiceOTPAuthenticatorTest {
         stepConfig.setSubjectAttributeStep(true);
         stepConfig.setAuthenticatedUser(authenticatedUser);
         context.setProperty(VoiceOTPConstants.CODE_MISMATCH, false);
-        context.setProperty(VoiceOTPConstants.OTP_TOKEN,"123456");
-        context.setProperty(VoiceOTPConstants.TOKEN_VALIDITY_TIME,"");
+        context.setProperty(VoiceOTPConstants.OTP_TOKEN, "123456");
+        context.setProperty(VoiceOTPConstants.TOKEN_VALIDITY_TIME, "");
         context.setSequenceConfig(new SequenceConfig());
         context.getSequenceConfig().getStepMap().put(1, stepConfig);
-        Whitebox.invokeMethod(authenticator, "getAuthenticatedUser",
+        invokePrivateMethod(authenticator, "getAuthenticatedUser",
+                new Class[]{AuthenticationContext.class},
                 context);
         Property property = new Property();
         property.setName(VoiceOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
-        PowerMockito.when(VoiceOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
                 .thenReturn(new Property[]{property});
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
 
-        Whitebox.invokeMethod(authenticator, "processAuthenticationResponse",
+        invokePrivateMethod(authenticator, "processAuthenticationResponse",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
     }
 
     @Test
     public void testProcessAuthenticationResponseWithvalidBackupCode() throws Exception {
-        
-        mockStatic(IdentityTenantUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(VoiceOTPConstants.OTP_TOKEN,"123456");
-        context.setProperty(VoiceOTPConstants.USER_NAME,"admin");
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
+        context.setProperty(VoiceOTPConstants.OTP_TOKEN, "123456");
+        context.setProperty(VoiceOTPConstants.USER_NAME, "admin");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setUserName("admin");
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(VoiceOTPUtils.getBackupCode(context)).thenReturn("true");
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getBackupCode(context)).thenReturn("true");
 
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        PowerMockito.when(userStoreManager
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Mockito.when(userStoreManager
                 .getUserClaimValue("admin@carbon.super", VoiceOTPConstants.SAVED_OTP_LIST, null))
                 .thenReturn("123456,789123");
-        mockStatic(FrameworkUtils.class);
-        PowerMockito.when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
+        mockedFrameworkUtils.when(FrameworkUtils::getMultiAttributeSeparator).thenReturn(",");
 
         Property property = new Property();
         property.setName(VoiceOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
-        PowerMockito.when(VoiceOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
                 .thenReturn(new Property[]{property});
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(userStoreManager.getClaimManager()).thenReturn(claimManager);
-        PowerMockito.when(userStoreManager.getClaimManager().getClaim(VoiceOTPConstants.SAVED_OTP_LIST))
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        Mockito.when(userStoreManager.getClaimManager()).thenReturn(claimManager);
+        Mockito.when(userStoreManager.getClaimManager().getClaim(VoiceOTPConstants.SAVED_OTP_LIST))
                 .thenReturn(claim);
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.CODE_MISMATCH)).thenReturn(false);
+        doReturn(false).when(context).getProperty(VoiceOTPConstants.CODE_MISMATCH);
 
         SequenceConfig sequenceConfig = new SequenceConfig();
         Map<Integer, StepConfig> stepMap = new HashMap<>();
@@ -617,45 +611,42 @@ public class VoiceOTPAuthenticatorTest {
         AuthenticatedUser authUser = new AuthenticatedUser();
         stepConfig.setAuthenticatedUser(authUser);
 
-        PowerMockito.when(VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
 
-        stepMap.put(1,stepConfig);
+        stepMap.put(1, stepConfig);
         sequenceConfig.setStepMap(stepMap);
 
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getBackupCode(context)).thenReturn("true");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getBackupCode(context)).thenReturn("true");
 
-        PowerMockito.when(context.getSequenceConfig()).thenReturn(new SequenceConfig());
+        doReturn(new SequenceConfig()).when(context).getSequenceConfig();
 
-        Whitebox.invokeMethod(authenticator, "processAuthenticationResponse",
+        invokePrivateMethod(authenticator, "processAuthenticationResponse",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
     }
 
     @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testProcessAuthenticationResponseWithCodeMismatch() throws Exception {
-        
-        mockStatic(VoiceOTPUtils.class);
-        mockStatic(IdentityTenantUtil.class);
-        PowerMockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
-        context.setProperty(VoiceOTPConstants.OTP_TOKEN,"123");
-        context.setProperty(VoiceOTPConstants.USER_NAME,"admin");
+        Mockito.when(httpServletRequest.getParameter(VoiceOTPConstants.CODE)).thenReturn("123456");
+        context.setProperty(VoiceOTPConstants.OTP_TOKEN, "123");
+        context.setProperty(VoiceOTPConstants.USER_NAME, "admin");
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
         authenticatedUser.setTenantDomain("carbon.super");
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(VoiceOTPUtils.getBackupCode(context)).thenReturn("false");
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getBackupCode(context)).thenReturn("false");
 
         Property property = new Property();
         property.setName(VoiceOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         property.setValue("true");
-        PowerMockito.when(VoiceOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getAccountLockConnectorConfigs(authenticatedUser.getTenantDomain()))
                 .thenReturn(new Property[]{property});
 
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
 
         SequenceConfig sequenceConfig = new SequenceConfig();
         Map<Integer, StepConfig> stepMap = new HashMap<>();
@@ -666,127 +657,109 @@ public class VoiceOTPAuthenticatorTest {
         AuthenticatedUser authUser = new AuthenticatedUser();
         stepConfig.setAuthenticatedUser(authUser);
 
-        PowerMockito.when(VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
 
-        stepMap.put(1,stepConfig);
+        stepMap.put(1, stepConfig);
         sequenceConfig.setStepMap(stepMap);
 
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.getBackupCode(context)).thenReturn("true");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getBackupCode(context)).thenReturn("true");
 
-        PowerMockito.when(context.getSequenceConfig()).thenReturn(new SequenceConfig());
+        doReturn(new SequenceConfig()).when(context).getSequenceConfig();
 
-        Whitebox.invokeMethod(authenticator, "processAuthenticationResponse",
+        invokePrivateMethod(authenticator, "processAuthenticationResponse",
+                new Class[]{HttpServletRequest.class, HttpServletResponse.class, AuthenticationContext.class},
                 httpServletRequest, response, context);
     }
 
     @Test
     public void testCheckWithBackUpCodes() throws Exception {
-        
-        mockStatic(IdentityTenantUtil.class);
-        context.setProperty(VoiceOTPConstants.USER_NAME,"admin");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        context.setProperty(VoiceOTPConstants.USER_NAME, "admin");
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(userRealm.getUserStoreManager()
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        Mockito.when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         VoiceOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
         AuthenticatedUser user = (AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
-        mockStatic(FrameworkUtils.class);
-        PowerMockito.when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
-        Whitebox.invokeMethod(authenticator, "checkWithBackUpCodes",
-                context,"1234",user);
+        mockedFrameworkUtils.when(FrameworkUtils::getMultiAttributeSeparator).thenReturn(",");
+        invokePrivateMethod(authenticator, "checkWithBackUpCodes",
+                new Class[]{AuthenticationContext.class, String.class, AuthenticatedUser.class},
+                context, "1234", user);
     }
 
     public void testCheckWithInvalidBackUpCodes() throws Exception {
-
-        mockStatic(IdentityTenantUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        context.setProperty(VoiceOTPConstants.USER_NAME,"admin");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        context.setProperty(VoiceOTPConstants.USER_NAME, "admin");
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
         AuthenticatedUser authenticatedUser = new AuthenticatedUser();
         authenticatedUser.setAuthenticatedSubjectIdentifier("admin");
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        mockStatic(FrameworkUtils.class);
-        PowerMockito.when(FrameworkUtils.getMultiAttributeSeparator()).thenReturn(",");
-        PowerMockito.when(userRealm.getUserStoreManager()
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedFrameworkUtils.when(FrameworkUtils::getMultiAttributeSeparator).thenReturn(",");
+        Mockito.when(userRealm.getUserStoreManager()
                 .getUserClaimValue(MultitenantUtils.getTenantAwareUsername("admin"),
                         VoiceOTPConstants.SAVED_OTP_LIST, null)).thenReturn("12345,4568,1234,7896");
-        Whitebox.invokeMethod(authenticator, "checkWithBackUpCodes",
+        invokePrivateMethod(authenticator, "checkWithBackUpCodes",
+                new Class[]{AuthenticationContext.class, String.class, AuthenticatedUser.class},
                 context, "45698789", authenticatedUser);
     }
 
     @Test
     public void testGetScreenAttribute() throws org.wso2.carbon.user.api.UserStoreException {
-        
-        mockStatic(IdentityTenantUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(VoiceOTPUtils.getScreenUserAttribute(context)).thenReturn
-                ("http://wso2.org/claims/mobile");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        PowerMockito.when(userRealm.getUserStoreManager()
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getScreenUserAttribute(context))
+                .thenReturn("http://wso2.org/claims/mobile");
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Mockito.when(userRealm.getUserStoreManager()
                 .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null))
                 .thenReturn("0778965231");
-        PowerMockito.when(VoiceOTPUtils.getNoOfDigits(context)).thenReturn("4");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
-        Assert.assertEquals(authenticator
-                .getScreenAttribute(context,userRealm,"admin"),"0778******");
+        Assert.assertEquals(authenticator.getScreenAttribute(context, userRealm, "admin"), "0778******");
 
-        PowerMockito.when(VoiceOTPUtils.getDigitsOrder(context)).thenReturn("backward");
-        Assert.assertEquals(authenticator
-                .getScreenAttribute(context,userRealm,"admin"),"******5231");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getDigitsOrder(context)).thenReturn("backward");
+        Assert.assertEquals(authenticator.getScreenAttribute(context, userRealm, "admin"), "******5231");
     }
 
     @Test
     public void testGetScreenAttributeWhenMobileRequest() throws org.wso2.carbon.user.api.UserStoreException {
-
-        mockStatic(IdentityTenantUtil.class);
-        mockStatic(VoiceOTPUtils.class);
-        PowerMockito.when(VoiceOTPUtils.getScreenUserAttribute(context)).thenReturn
-                ("http://wso2.org/claims/mobile");
-        PowerMockito.when(context.getProperty(REQUESTED_USER_MOBILE)).thenReturn("0778899889");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        PowerMockito.when(userRealm.getUserStoreManager()
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getScreenUserAttribute(context))
+                .thenReturn("http://wso2.org/claims/mobile");
+        doReturn("0778899889").when(context).getProperty(REQUESTED_USER_MOBILE);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Mockito.when(userRealm.getUserStoreManager()
                 .getUserClaimValue("admin", "http://wso2.org/claims/mobile", null)).thenReturn(null);
-        PowerMockito.when(VoiceOTPUtils.getNoOfDigits(context)).thenReturn("4");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getNoOfDigits(context)).thenReturn("4");
 
-        Assert.assertEquals(authenticator
-                .getScreenAttribute(context, userRealm, "admin"), "0778******");
+        Assert.assertEquals(authenticator.getScreenAttribute(context, userRealm, "admin"), "0778******");
 
-        PowerMockito.when(VoiceOTPUtils.getDigitsOrder(context)).thenReturn("backward");
-        Assert.assertEquals(authenticator
-                .getScreenAttribute(context, userRealm, "admin"), "******9889");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getDigitsOrder(context)).thenReturn("backward");
+        Assert.assertEquals(authenticator.getScreenAttribute(context, userRealm, "admin"), "******9889");
     }
 
     @Test
     public void testUpdateMobileNumberForUsername() throws Exception {
-        
-        mockStatic(IdentityTenantUtil.class);
-        PowerMockito.when(IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
-        Whitebox.invokeMethod(authenticator, "updateMobileNumberForUsername",
-                context,httpServletRequest,"admin","carbon.super");
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("carbon.super")).thenReturn(-1234);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(-1234)).thenReturn(null);
+        invokePrivateMethod(authenticator, "updateMobileNumberForUsername",
+                new Class[]{AuthenticationContext.class, HttpServletRequest.class, String.class, String.class},
+                context, httpServletRequest, "admin", "carbon.super");
     }
 
     @Test
     public void testGetConfigurationProperties() {
-        
         List<Property> configProperties = new ArrayList<>();
         Property voiceUrl = new Property();
         configProperties.add(voiceUrl);
@@ -817,50 +790,44 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testDefaultOtpSeparationCharacters() throws Exception {
-
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getOTPSeparationCharacters",
-                context),"%2B");
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getOTPSeparationCharacters",
+                new Class[]{AuthenticationContext.class}, context), "%2B");
     }
 
     @Test
     public void testOtpSeparationCharacters() throws Exception {
-
-        PowerMockito.when(context.getAuthenticatorProperties()).thenReturn(authenticatorProperties);
-        PowerMockito.when(context.getAuthenticatorProperties().get(OTP_SEPARATOR)).thenReturn("%20");
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator, "getOTPSeparationCharacters",
-                context),"%20");
+        doReturn(authenticatorProperties).when(context).getAuthenticatorProperties();
+        Mockito.when(authenticatorProperties.get(OTP_SEPARATOR)).thenReturn("%20");
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getOTPSeparationCharacters",
+                new Class[]{AuthenticationContext.class}, context), "%20");
     }
 
     @Test
     public void testDefaultDivisorValue() throws Exception {
-
-        Assert.assertEquals(Integer.toString(Whitebox.invokeMethod(authenticator, "getDivisor",
-                context)),"1");
+        Assert.assertEquals(Integer.toString((Integer) invokePrivateMethod(authenticator, "getDivisor",
+                new Class[]{AuthenticationContext.class}, context)), "1");
     }
 
     @Test
     public void testDivisorValue() throws Exception {
-
-        PowerMockito.when(context.getAuthenticatorProperties()).thenReturn(authenticatorProperties);
-        PowerMockito.when(context.getAuthenticatorProperties().get(DIVISOR)).thenReturn("2");
-        Assert.assertEquals(Integer.toString(Whitebox.invokeMethod(authenticator, "getDivisor",
-                context)),"2");
-
+        doReturn(authenticatorProperties).when(context).getAuthenticatorProperties();
+        Mockito.when(authenticatorProperties.get(DIVISOR)).thenReturn("2");
+        Assert.assertEquals(Integer.toString((Integer) invokePrivateMethod(authenticator, "getDivisor",
+                new Class[]{AuthenticationContext.class}, context)), "2");
     }
 
     @Test
     public void testOtpSeparation() throws Exception {
-
-        PowerMockito.when(context.getAuthenticatorProperties()).thenReturn(authenticatorProperties);
-        PowerMockito.when(context.getAuthenticatorProperties().get(OTP_SEPARATOR)).thenReturn("%20");
-        PowerMockito.when(context.getAuthenticatorProperties().get(DIVISOR)).thenReturn("2");
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator, "splitAndFormatOtp",
-                "123456",2,context),"12%2034%2056");
+        doReturn(authenticatorProperties).when(context).getAuthenticatorProperties();
+        Mockito.when(authenticatorProperties.get(OTP_SEPARATOR)).thenReturn("%20");
+        Mockito.when(authenticatorProperties.get(DIVISOR)).thenReturn("2");
+        Assert.assertEquals(invokePrivateMethod(authenticator, "splitAndFormatOtp",
+                new Class[]{String.class, int.class, AuthenticationContext.class},
+                "123456", 2, context), "12%2034%2056");
     }
 
     @Test
     public void testSuccessfulGetConnection() throws Exception {
-
         String receivedMobileNumber = "1234567890";
         String otpToken = "123456";
         Integer httpResponse = 200;
@@ -872,32 +839,33 @@ public class VoiceOTPAuthenticatorTest {
         httpURLConnection.setDoOutput(true);
         httpURLConnection.setDoInput(true);
 
-        Assert.assertEquals(Whitebox
-                .invokeMethod(authenticator, "getConnection",
-                        httpURLConnection, context, null, null,
-                        httpResponse.toString(), receivedMobileNumber, otpToken, "GET"), Boolean.TRUE);
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getConnection",
+                new Class[]{HttpURLConnection.class, AuthenticationContext.class, String.class, String.class,
+                        String.class, String.class, String.class, String.class},
+                httpURLConnection, context, null, null,
+                httpResponse.toString(), receivedMobileNumber, otpToken, "GET"), Boolean.TRUE);
     }
 
     @Test
     public void testGetConnectionWithUnauthorizedResponse() throws Exception {
-        
         String headerString = "Content-Type:application/json";
         String payload = "{\"key\":\"value\"}";
         String httpMethod = "POST";
 
         URL url = new URL("https://google.lk");
 
-        httpURLConnection = (HttpURLConnection)Mockito.mock(url.openConnection().getClass());
-        PowerMockito.when(httpURLConnection.getResponseCode()).thenReturn(401);
-        PowerMockito.when(httpURLConnection.getResponseMessage()).thenReturn("Unauthorized");
-        PowerMockito.when(httpURLConnection.getOutputStream()).thenReturn(new OutputStream() {
+        httpURLConnection = (HttpURLConnection) Mockito.mock(url.openConnection().getClass());
+        Mockito.when(httpURLConnection.getResponseCode()).thenReturn(401);
+        Mockito.when(httpURLConnection.getResponseMessage()).thenReturn("Unauthorized");
+        Mockito.when(httpURLConnection.getOutputStream()).thenReturn(new OutputStream() {
             @Override
             public void write(int b) throws IOException {
-
             }
         });
 
-        boolean result = Whitebox.invokeMethod(authenticator, "getConnection",
+        boolean result = (boolean) invokePrivateMethod(authenticator, "getConnection",
+                new Class[]{HttpURLConnection.class, AuthenticationContext.class, String.class, String.class,
+                        String.class, String.class, String.class, String.class},
                 httpURLConnection, context, headerString, payload, null,
                 "0713933424", null, httpMethod);
 
@@ -908,7 +876,6 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testGetConnectionWithSuccessfulResponse() throws Exception {
-        
         String headerString = "Content-Type:application/json";
         String payload = "{\"key\":\"value\"}";
         String httpMethod = "POST";
@@ -916,11 +883,13 @@ public class VoiceOTPAuthenticatorTest {
         URL url = new URL("https://google.lk");
 
         httpURLConnection = (HttpURLConnection) Mockito.mock(url.openConnection().getClass());
-        PowerMockito.when(httpURLConnection.getResponseCode()).thenReturn(200);
-        PowerMockito.when(httpURLConnection.getResponseMessage()).thenReturn("OK");
-        PowerMockito.when(httpURLConnection.getOutputStream()).thenReturn(new ByteArrayOutputStream());
+        Mockito.when(httpURLConnection.getResponseCode()).thenReturn(200);
+        Mockito.when(httpURLConnection.getResponseMessage()).thenReturn("OK");
+        Mockito.when(httpURLConnection.getOutputStream()).thenReturn(new ByteArrayOutputStream());
 
-        boolean result = Whitebox.invokeMethod(authenticator, "getConnection",
+        boolean result = (boolean) invokePrivateMethod(authenticator, "getConnection",
+                new Class[]{HttpURLConnection.class, AuthenticationContext.class, String.class, String.class,
+                        String.class, String.class, String.class, String.class},
                 httpURLConnection, context, headerString, payload,
                 null, "07123456789", null, httpMethod);
 
@@ -928,42 +897,35 @@ public class VoiceOTPAuthenticatorTest {
         verify(httpURLConnection).setRequestMethod("POST");
         verify(httpURLConnection).setRequestProperty("Content-Type", "application/json");
     }
-    
+
     @Test
     public void testProceedWithOTPSuccess() throws Exception {
-        
         String errorPage = "errorPage";
         String mobileNumber = "1234567890";
         String queryParams = "queryParams";
         String username = "testUser";
 
-        Map<String, String> authenticatorProperties = new HashMap<>();
-        authenticatorProperties.put(VoiceOTPConstants.VOICE_URL, "http://google.lk");
-        authenticatorProperties.put(VoiceOTPConstants.HTTP_METHOD, "POST");
-        PowerMockito.when(context.getAuthenticatorProperties()).thenReturn(authenticatorProperties);
-        PowerMockito.when(VoiceOTPUtils.getLoginPageFromXMLFile(context))
+        Map<String, String> authProps = new HashMap<>();
+        authProps.put(VoiceOTPConstants.VOICE_URL, "http://google.lk");
+        authProps.put(VoiceOTPConstants.HTTP_METHOD, "POST");
+        doReturn(authProps).when(context).getAuthenticatorProperties();
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getLoginPageFromXMLFile(context))
                 .thenReturn("authenticationendpoint/voiceOtp.jsp");
-        PowerMockito.when(configurationFacade.getAuthenticationEndpointURL())
+        Mockito.when(configurationFacade.getAuthenticationEndpointURL())
                 .thenReturn("/authenticationendpoint/login.do");
-        PowerMockito.when(VoiceOTPUtils.getTokenLength(context)).thenReturn("6");
-        PowerMockito.when(VoiceOTPUtils.getTokenExpiryTime(context)).thenReturn("300");
-        PowerMockito.when(OneTimePasswordUtils
-                .getRandomNumber(VoiceOTPConstants.SECRET_KEY_LENGTH)).thenReturn("123456");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getTokenLength(context)).thenReturn("6");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getTokenExpiryTime(context)).thenReturn("300");
+        mockedOneTimePasswordUtils.when(() -> OneTimePasswordUtils.getRandomNumber(VoiceOTPConstants.SECRET_KEY_LENGTH))
+                .thenReturn("123456");
 
-        byte [] test = "12345".getBytes();
+        byte[] test = "12345".getBytes();
         Long testL = Long.parseLong("12345");
 
+        mockedOneTimePasswordUtils.when(() -> OneTimePasswordUtils.generateToken("123456", "2", 6, false))
+                .thenReturn("123456");
+        mockedOneTimePasswordUtils.when(() -> OneTimePasswordUtils.generateOTP(test, testL, 6, false, 1))
+                .thenReturn("12345");
 
-        PowerMockito.when(OneTimePasswordUtils.generateToken("123456", "2", 6,
-                false)).thenReturn("123456");
-        PowerMockito.when(OneTimePasswordUtils
-                .generateOTP(test,testL,6,false, 1)).thenReturn("12345");
-        PowerMockito.when(authenticator.sendRESTCall(context,"https://testdomain.com/voice", POST_METHOD,
-                "Authorization: Basic dGVzdDp0ZXN0",
-                "{\"key\":\"key\",\"value\":\"value\"}", "200", "+94123456789",
-                "123456")).thenReturn(true);
-
-         
         invokeProceedWithOTPPrivateMethod(authenticator, "proceedWithOTP", response,
                 context, errorPage, mobileNumber, queryParams, username);
         verify(response, times(1)).sendRedirect(anyString());
@@ -971,60 +933,53 @@ public class VoiceOTPAuthenticatorTest {
 
     private void invokeProceedWithOTPPrivateMethod(Object instance, String methodName, Object... args)
             throws Exception {
-        
         Method method = instance.getClass().getDeclaredMethod(methodName, HttpServletResponse.class,
                 AuthenticationContext.class, String.class, String.class, String.class, String.class);
         method.setAccessible(true);
         method.invoke(instance, args);
     }
 
-    @Test
+    @Test(expectedExceptions = {AuthenticationFailedException.class})
     public void testSendRestCall() throws AuthenticationFailedException, IOException {
-
-        Map<String, String> authenticatorProperties = new HashMap<>();
         String header = "Authorization: Basic dGVzdDp0ZXN0";
         String httpMethod = "POST";
         String payload = "{\"key\":\"key\",\"value\":\"value\"}";
-        String voiceURL = "https://testdomain.com/voice";
+        String voiceURL = "http://127.0.0.1:1/voice";
         String httpResponse = "200";
 
-
-        authenticator.sendRESTCall(context,voiceURL,httpMethod,header,payload,
-                httpResponse,"+94713933424","123456");
+        authenticator.sendRESTCall(context, voiceURL, httpMethod, header, payload,
+                httpResponse, "+94713933424", "123456");
     }
 
     @Test
     public void testGetMultiOptionURIQueryParam_RequestIsNull() throws Exception {
-
         HttpServletRequest request = null;
 
-        String result = Whitebox
-                .invokeMethod(authenticator, "getMultiOptionURIQueryParam",request);
+        String result = (String) invokePrivateMethod(authenticator, "getMultiOptionURIQueryParam",
+                new Class[]{HttpServletRequest.class}, request);
 
         Assert.assertEquals(StringUtils.EMPTY, result);
     }
 
     @Test
     public void testGetMultiOptionURIQueryParam_ParameterIsEmpty() throws Exception {
-
         HttpServletRequest request = mock(HttpServletRequest.class);
-        PowerMockito.when(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI)).thenReturn("");
+        Mockito.when(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI)).thenReturn("");
 
-        String result = Whitebox.invokeMethod(authenticator,
-                "getMultiOptionURIQueryParam",request);
+        String result = (String) invokePrivateMethod(authenticator, "getMultiOptionURIQueryParam",
+                new Class[]{HttpServletRequest.class}, request);
 
         Assert.assertEquals(StringUtils.EMPTY, result);
     }
 
     @Test
     public void testGetMultiOptionURIQueryParam_ParameterIsNotEmpty() throws Exception {
-
         HttpServletRequest request = mock(HttpServletRequest.class);
         String expectedValue = "someValue";
-        PowerMockito.when(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI)).thenReturn(expectedValue);
+        Mockito.when(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI)).thenReturn(expectedValue);
 
-        String result = Whitebox.invokeMethod(authenticator,
-                "getMultiOptionURIQueryParam",request);
+        String result = (String) invokePrivateMethod(authenticator, "getMultiOptionURIQueryParam",
+                new Class[]{HttpServletRequest.class}, request);
 
         String expectedQueryParam = "&" +
                 VoiceOTPConstants.MULTI_OPTION_URI + "=" + Encode.forUriComponent(expectedValue);
@@ -1033,39 +988,34 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testGetMultiOptionURIQueryParam_ParrameterIsNull() throws Exception {
-
         HttpServletRequest request = mock(HttpServletRequest.class);
-        PowerMockito.when(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI)).thenReturn(null);
+        Mockito.when(request.getParameter(VoiceOTPConstants.MULTI_OPTION_URI)).thenReturn(null);
 
-        Assert.assertEquals(Whitebox.invokeMethod(authenticator,
-                "getMultiOptionURIQueryParam",request), StringUtils.EMPTY);
+        Assert.assertEquals(invokePrivateMethod(authenticator, "getMultiOptionURIQueryParam",
+                new Class[]{HttpServletRequest.class}, request), StringUtils.EMPTY);
     }
 
     @Test
     public void testHandleVoiceOtpVerificationFailWhenLocalUserWithAccountLockingDisabled() throws Exception {
-        
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(false);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(false);
         invokeHandleVoiceOtpVerificationFailPrivateMethod(authenticator,
                 "handleVoiceOtpVerificationFail", context);
         Assert.assertFalse(VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context));
     }
 
-    private void invokeHandleVoiceOtpVerificationFailPrivateMethod
-            (Object instance, String methodName, Object... args) throws Exception {
-        
-        Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticationContext.class);
+    private void invokeHandleVoiceOtpVerificationFailPrivateMethod(Object instance, String methodName, Object... args)
+            throws Exception {
+        Method method = instance.getClass().getDeclaredMethod(methodName, AuthenticationContext.class);
         method.setAccessible(true);
         method.invoke(instance, args);
     }
 
     @Test
     public void testHandleVoiceOtpVerificationFailWhenAccountAlreadyLocked() throws Exception {
-        
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
-        PowerMockito.when((AuthenticatedUser) context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(true);
         invokeHandleVoiceOtpVerificationFailPrivateMethod(authenticator,
                 "handleVoiceOtpVerificationFail", context);
         Assert.assertTrue(VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context));
@@ -1073,13 +1023,11 @@ public class VoiceOTPAuthenticatorTest {
 
     @Test
     public void testHandleVoiceOtpVerificationFailWhenMaxAttemptsExceeded() throws Exception {
-        
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(authenticatedUser.getTenantDomain()).thenReturn("testdomain");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        Mockito.when(authenticatedUser.getTenantDomain()).thenReturn("testdomain");
 
         Property accountLockOnFailure = new Property();
         accountLockOnFailure.setName(VoiceOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
@@ -1094,195 +1042,211 @@ public class VoiceOTPAuthenticatorTest {
         loginFailTimeoutRatio.setName(VoiceOTPConstants.PROPERTY_LOGIN_FAIL_TIMEOUT_RATIO);
         loginFailTimeoutRatio.setDefaultValue("1.5");
 
-        Property [] properties  = new Property[]{accountLockOnFailure,accountLockTime,
-                loginFailTimeoutRatio,accountLockOnFailureMax};
-        PowerMockito.when(VoiceOTPUtils.getAccountLockConnectorConfigs("testdomain"))
+        Property[] properties = new Property[]{accountLockOnFailure, accountLockTime,
+                loginFailTimeoutRatio, accountLockOnFailureMax};
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getAccountLockConnectorConfigs("testdomain"))
                 .thenReturn(properties);
 
         Map<String, String> claims = new HashMap<>();
         claims.put(VoiceOTPConstants.VOICE_OTP_FAILED_ATTEMPTS_CLAIM, "2");
         claims.put(VoiceOTPConstants.FAILED_LOGIN_LOCKOUT_COUNT_CLAIM, "1");
-        PowerMockito.when(userStoreManager.getUserClaimValues(anyString(),anyObject(), anyString()))
+        Mockito.when(userStoreManager.getUserClaimValues(anyString(), any(), anyString()))
                 .thenReturn(claims);
 
         invokehandleVoiceOtpVerificationFailPrivateMethod(authenticator,
-                "handleVoiceOtpVerificationFail",context);
+                "handleVoiceOtpVerificationFail", context);
 
-        verify(VoiceOTPUtils.class, times(1));
-        VoiceOTPUtils.getAccountLockConnectorConfigs(anyString());
+        mockedVoiceOTPUtils.verify(() -> VoiceOTPUtils.getAccountLockConnectorConfigs(anyString()), times(1));
     }
 
-    private void invokehandleVoiceOtpVerificationFailPrivateMethod
-            (Object instance, String methodName, Object... args) throws Exception {
-        
-        Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticationContext.class);
+    private void invokehandleVoiceOtpVerificationFailPrivateMethod(Object instance, String methodName, Object... args)
+            throws Exception {
+        Method method = instance.getClass().getDeclaredMethod(methodName, AuthenticationContext.class);
         method.setAccessible(true);
         method.invoke(instance, args);
     }
 
-    @Test(expectedExceptions=Exception.class)
+    @Test(expectedExceptions = Exception.class)
     public void testHandleVoiceOtpVerificationFailIncrementalFailure() throws Exception {
-        
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(authenticatedUser.getTenantDomain()).thenReturn("testdomain");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLocked(authenticatedUser)).thenReturn(false);
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        Mockito.when(authenticatedUser.getTenantDomain()).thenReturn("testdomain");
 
         Property accountLockOnFailureMax = new Property();
         accountLockOnFailureMax.setName(VoiceOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE_MAX);
         accountLockOnFailureMax.setDefaultValue("3");
 
-        Property [] properties  = new Property[]{accountLockOnFailureMax};
-        PowerMockito.when(VoiceOTPUtils.getAccountLockConnectorConfigs("testdomain"))
+        Property[] properties = new Property[]{accountLockOnFailureMax};
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getAccountLockConnectorConfigs("testdomain"))
                 .thenReturn(properties);
 
         Map<String, String> claims = new HashMap<>();
         claims.put(VoiceOTPConstants.VOICE_OTP_FAILED_ATTEMPTS_CLAIM, "1");
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        PowerMockito.when(userStoreManager.getUserClaimValues(anyString(),anyObject(), anyString()))
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Mockito.when(userStoreManager.getUserClaimValues(anyString(), any(), anyString()))
                 .thenReturn(claims);
 
-        PowerMockito.when(IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(1)).thenReturn(userRealm);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(1)).thenReturn(userRealm);
 
-        invokehandleVoiceOtpVerificationFailPrivateMethod
-                (authenticator,"handleVoiceOtpVerificationFail",context);
+        invokehandleVoiceOtpVerificationFailPrivateMethod(authenticator, "handleVoiceOtpVerificationFail", context);
     }
 
     @Test
     public void testResetVoiceOtpFailedAttemptsWhenAccountLockingEnabledOrFederatedFlow() throws Exception {
-        
-        PowerMockito.when(VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
-        PowerMockito.when(VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.AUTHENTICATED_USER))
-                .thenReturn(authenticatedUser);
-        PowerMockito.when(authenticatedUser.getTenantDomain()).thenReturn("testdomain");
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isLocalUser(context)).thenReturn(true);
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.isAccountLockingEnabledForVoiceOtp(context)).thenReturn(true);
+        doReturn(authenticatedUser).when(context).getProperty(VoiceOTPConstants.AUTHENTICATED_USER);
+        Mockito.when(authenticatedUser.getTenantDomain()).thenReturn("testdomain");
 
         Property accountLockOnFailure = new Property();
         accountLockOnFailure.setName(VoiceOTPConstants.PROPERTY_ACCOUNT_LOCK_ON_FAILURE);
         accountLockOnFailure.setDefaultValue("false");
 
-
-        Property [] properties  = new Property[]{};
-        PowerMockito.when(VoiceOTPUtils.getAccountLockConnectorConfigs("testdomain"))
+        Property[] properties = new Property[]{};
+        mockedVoiceOTPUtils.when(() -> VoiceOTPUtils.getAccountLockConnectorConfigs("testdomain"))
                 .thenReturn(properties);
 
-        PowerMockito.when(IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
+        mockedIdentityUtil.when(() -> IdentityUtil.addDomainToName(authenticatedUser.getUserName(),
                 authenticatedUser.getUserStoreDomain())).thenReturn("testuser@tenantdomain");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(1)).thenReturn(userRealm);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(1)).thenReturn(userRealm);
 
         Map<String, String> claims = new HashMap<>();
         claims.put(VoiceOTPConstants.VOICE_OTP_FAILED_ATTEMPTS_CLAIM, "1");
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
-        PowerMockito.when(userStoreManager.getUserClaimValues(anyString(),anyObject(), anyString()))
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Mockito.when(userStoreManager.getUserClaimValues(anyString(), any(), anyString()))
                 .thenReturn(claims);
 
-        invokeResetVoiceOtpFailedAttemptsPrivateMethod
-                (authenticator,"resetVoiceOtpFailedAttempts",context);
+        invokeResetVoiceOtpFailedAttemptsPrivateMethod(authenticator, "resetVoiceOtpFailedAttempts", context);
     }
 
-    private void invokeResetVoiceOtpFailedAttemptsPrivateMethod
-            (Object instance, String methodName, Object... args) throws Exception {
-        
-        Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticationContext.class);
+    private void invokeResetVoiceOtpFailedAttemptsPrivateMethod(Object instance, String methodName, Object... args)
+            throws Exception {
+        Method method = instance.getClass().getDeclaredMethod(methodName, AuthenticationContext.class);
         method.setAccessible(true);
         method.invoke(instance, args);
     }
+
     @Test(expectedExceptions = Exception.class)
     public void testGetUnlockTimeInMilliSecondsWhenUserRealmIsNull() throws Exception {
-        
         String username = "testuser";
-        PowerMockito.when(authenticatedUser.toFullQualifiedUsername()).thenReturn(username);
-        PowerMockito.when(MultitenantUtils.getTenantAwareUsername(username))
+        Mockito.when(authenticatedUser.toFullQualifiedUsername()).thenReturn(username);
+        mockedMultitenantUtils.when(() -> MultitenantUtils.getTenantAwareUsername(username))
                 .thenReturn("testuser@testdomain");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(1)).thenReturn(null);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(null);
-        invokegetUnlockTimeInMilliSecondsPrivateMethod
-                (authenticator,"getUnlockTimeInMilliSeconds",authenticatedUser);
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(1)).thenReturn(null);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(null);
+        invokegetUnlockTimeInMilliSecondsPrivateMethod(authenticator, "getUnlockTimeInMilliSeconds", authenticatedUser);
     }
 
-
-    private void invokegetUnlockTimeInMilliSecondsPrivateMethod
-            (Object instance, String methodName, Object... args) throws Exception {
-        
-        Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticatedUser.class);
+    private void invokegetUnlockTimeInMilliSecondsPrivateMethod(Object instance, String methodName, Object... args)
+            throws Exception {
+        Method method = instance.getClass().getDeclaredMethod(methodName, AuthenticatedUser.class);
         method.setAccessible(true);
         method.invoke(instance, args);
     }
 
     @Test
     public void testGetUnlockTimeInMilliSecondsWhenClaimValueConfigured() throws Exception {
-        
         String username = "testuser";
         String tenantAwareUsername = "testuser@testdomain";
         realmService = mock(RealmService.class);
         userRealm = mock(UserRealm.class);
-        PowerMockito.when(authenticatedUser.toFullQualifiedUsername()).thenReturn(username);
-        PowerMockito.when(MultitenantUtils.getTenantAwareUsername(username)).thenReturn(tenantAwareUsername);
-        PowerMockito.when(MultitenantUtils.getTenantDomain(username)).thenReturn("testdomain");
-        PowerMockito.when(IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
-        PowerMockito.when(IdentityTenantUtil.getRealmService()).thenReturn(realmService);
-        PowerMockito.when(realmService.getTenantUserRealm(1)).thenReturn(userRealm);
-        PowerMockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
+        Mockito.when(authenticatedUser.toFullQualifiedUsername()).thenReturn(username);
+        mockedMultitenantUtils.when(() -> MultitenantUtils.getTenantAwareUsername(username))
+                .thenReturn(tenantAwareUsername);
+        mockedMultitenantUtils.when(() -> MultitenantUtils.getTenantDomain(username)).thenReturn("testdomain");
+        mockedIdentityTenantUtil.when(() -> IdentityTenantUtil.getTenantId("testdomain")).thenReturn(1);
+        mockedIdentityTenantUtil.when(IdentityTenantUtil::getRealmService).thenReturn(realmService);
+        Mockito.when(realmService.getTenantUserRealm(1)).thenReturn(userRealm);
+        Mockito.when(userRealm.getUserStoreManager()).thenReturn(userStoreManager);
 
         Map<String, String> claimValues = new HashMap<>();
         claimValues.put(VoiceOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM, "123456789");
-        PowerMockito.when(userStoreManager.getUserClaimValues(tenantAwareUsername,
+        Mockito.when(userStoreManager.getUserClaimValues(tenantAwareUsername,
                 new String[]{VoiceOTPConstants.ACCOUNT_UNLOCK_TIME_CLAIM},
                 null)).thenReturn(claimValues);
 
-        long unlockTime = (long) invokegetUnlockTimeInMilliSecondsPrivateMethodWithReturn
-                (authenticator,"getUnlockTimeInMilliSeconds",authenticatedUser);
+        long unlockTime = (long) invokegetUnlockTimeInMilliSecondsPrivateMethodWithReturn(
+                authenticator, "getUnlockTimeInMilliSeconds", authenticatedUser);
         Assert.assertEquals(123456789L, unlockTime);
     }
 
-    private Object invokegetUnlockTimeInMilliSecondsPrivateMethodWithReturn
-            (Object instance, String methodName, Object... args) throws Exception {
-        
-        Method method = instance.getClass().getDeclaredMethod(methodName,AuthenticatedUser.class);
+    private Object invokegetUnlockTimeInMilliSecondsPrivateMethodWithReturn(Object instance, String methodName,
+            Object... args) throws Exception {
+        Method method = instance.getClass().getDeclaredMethod(methodName, AuthenticatedUser.class);
         method.setAccessible(true);
         return method.invoke(instance, args);
     }
 
     @Test(expectedExceptions = Exception.class)
     public void testProcessValidUserTokenFail() throws Exception {
+        doReturn(6).when(context).getProperty(VoiceOTPConstants.TOKEN_VALIDITY_TIME);
+        doReturn(otpTime).when(context).getProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME);
 
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.TOKEN_VALIDITY_TIME)).thenReturn(6);
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME)).thenReturn(otpTime);
-
-        invokeProcessValidUserTokenPrivateMethod
-                (authenticator,"processValidUserToken",context,authenticatedUser);
+        invokeProcessValidUserTokenPrivateMethod(authenticator, "processValidUserToken", context, authenticatedUser);
     }
 
     @Test
     public void testProcessValidUserTokenSuccess() throws Exception {
+        doReturn(System.currentTimeMillis()).when(context).getProperty(VoiceOTPConstants.TOKEN_VALIDITY_TIME);
+        doReturn(otpTime).when(context).getProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME);
 
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.TOKEN_VALIDITY_TIME))
-                .thenReturn(System.currentTimeMillis());
-        PowerMockito.when(context.getProperty(VoiceOTPConstants.SENT_OTP_TOKEN_TIME)).thenReturn(otpTime);
-
-        invokeProcessValidUserTokenPrivateMethod
-                (authenticator,"processValidUserToken",context,authenticatedUser);
+        invokeProcessValidUserTokenPrivateMethod(authenticator, "processValidUserToken", context, authenticatedUser);
     }
 
-    private void invokeProcessValidUserTokenPrivateMethod
-            (Object instance, String methodName, Object... args) throws Exception {
-        
-        Method method = instance.getClass().getDeclaredMethod
-                (methodName,AuthenticationContext.class,AuthenticatedUser.class);
+    private void invokeProcessValidUserTokenPrivateMethod(Object instance, String methodName, Object... args)
+            throws Exception {
+        Method method = instance.getClass().getDeclaredMethod(methodName, AuthenticationContext.class,
+                AuthenticatedUser.class);
         method.setAccessible(true);
         method.invoke(instance, args);
     }
 
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-        return new PowerMockObjectFactory();
+    private static Object invokePrivateMethod(Object target, String methodName, Object... args) throws Exception {
+        Class<?> clazz = target.getClass();
+        while (clazz != null) {
+            for (Method method : clazz.getDeclaredMethods()) {
+                if (method.getName().equals(methodName) && method.getParameterCount() == args.length) {
+                    method.setAccessible(true);
+                    try {
+                        return method.invoke(target, args);
+                    } catch (java.lang.reflect.InvocationTargetException e) {
+                        Throwable cause = e.getCause();
+                        if (cause instanceof Exception) throw (Exception) cause;
+                        throw new RuntimeException(cause);
+                    }
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        throw new NoSuchMethodException("Method " + methodName + " not found with " + args.length + " params");
+    }
+
+    private static Object invokePrivateMethod(Object target, String methodName, Class<?>[] paramTypes, Object... args)
+            throws Exception {
+        Class<?> clazz = target.getClass();
+        while (clazz != null) {
+            try {
+                Method method = clazz.getDeclaredMethod(methodName, paramTypes);
+                method.setAccessible(true);
+                try {
+                    return method.invoke(target, args);
+                } catch (java.lang.reflect.InvocationTargetException e) {
+                    Throwable cause = e.getCause();
+                    if (cause instanceof Exception) throw (Exception) cause;
+                    throw new RuntimeException(cause);
+                }
+            } catch (NoSuchMethodException e) {
+                clazz = clazz.getSuperclass();
+            }
+        }
+        throw new NoSuchMethodException("Method " + methodName + " not found");
     }
 }

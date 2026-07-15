@@ -18,35 +18,27 @@
  */
 package org.wso2.carbon.identity.authenticator.voiceotp.test;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.testng.PowerMockObjectFactory;
-import org.powermock.reflect.Whitebox;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.testng.Assert;
-import org.testng.IObjectFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
 import org.wso2.carbon.identity.authenticator.voiceotp.OneTimePasswordUtils;
 
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-import static org.mockito.MockitoAnnotations.initMocks;
-
 public class OnetimePasswordTest {
+
     private OneTimePasswordUtils oneTimePassword;
 
     @BeforeMethod
     public void setUp() throws Exception {
         oneTimePassword = new OneTimePasswordUtils();
-        initMocks(this);
-    }
-
-    @ObjectFactory
-    public IObjectFactory getObjectFactory() {
-        return new PowerMockObjectFactory();
+        MockitoAnnotations.openMocks(this);
     }
 
     @AfterMethod
@@ -74,15 +66,17 @@ public class OnetimePasswordTest {
 
     @Test
     public void testGenerateTokenWithNumericToken() throws Exception {
-        OneTimePasswordUtils otp = PowerMockito.spy(oneTimePassword);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, false),
-                "0020315280");
+        OneTimePasswordUtils otp = Mockito.spy(oneTimePassword);
+        Method method = otp.getClass().getDeclaredMethod("generateToken", String.class, String.class, int.class, boolean.class);
+        method.setAccessible(true);
+        Assert.assertEquals(method.invoke(otp, "Hello", "32", 10, false), "0020315280");
     }
 
     @Test
     public void testGenerateTokenWithAlphaNumericToken() throws Exception {
-        OneTimePasswordUtils otp = PowerMockito.spy(oneTimePassword);
-        Assert.assertEquals(Whitebox.invokeMethod(otp, "generateToken", "Hello", "32", 10, true),
-                "3FDC3J6089");
+        OneTimePasswordUtils otp = Mockito.spy(oneTimePassword);
+        Method method = otp.getClass().getDeclaredMethod("generateToken", String.class, String.class, int.class, boolean.class);
+        method.setAccessible(true);
+        Assert.assertEquals(method.invoke(otp, "Hello", "32", 10, true), "3FDC3J6089");
     }
 }
